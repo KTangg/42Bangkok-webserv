@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2022/09/20 00:23:45 by spoolpra         ###   ########.fr        #
+#    Updated: 2022/10/07 10:50:42 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,8 +18,10 @@ SRC_DIR = srcs/
 OBJ_DIR = objs/
 
 NAME = webserv
-SRCS = main.cpp worker/Worker.cpp
-INCS = -Iincludes/
+SRCS =	main.cpp \
+		server/Worker.cpp
+
+INCS = -I includes/ -I srcs/server/
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)

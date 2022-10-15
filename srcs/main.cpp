@@ -1,25 +1,18 @@
-#include <iostream>
-#include <cstdlib>
 #include "webserv.hpp"
-#include "worker/Worker.hpp"
+#include "Worker.hpp"
 
-void usage(void);
+#define PORT 80
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        usage();
-        exit(EXIT_FAILURE);
-    }
-    (void)argv;
-    socket_t sock;
+int main(void) {
 
-    sock.host = inet_addr("192.168.0.246");
-    sock.port = 8000;
-    Worker test(sock);
-    test.serve();
-}
+    sockaddr_in_t                   address;
+    std::map<std::string, Route>    route;
+    std::map<int, std::string>      error;
 
-/// @brief Print out to std::cerr or fd = 2 on how to execute this file
-void usage(void) {
-    std::cerr << "Usage: ./webserv [configuration file]" << std::endl;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+    Worker server = Worker(address, route, error);
+    server.init();
+    server.listen();
 }
