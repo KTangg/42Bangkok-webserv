@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 #include "server/Worker.hpp"
 
-#define PORT 80
+#define PORT 8080
 
 int main(void) {
 

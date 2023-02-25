@@ -43,11 +43,11 @@ typedef std::vector<struct pollfd>::iterator iterator_poll;
 // Macro stuff
 # define ERROR -1
 # define SUCCESS 0
-# define DEFAULT_EVENT POLLIN | POLLOUT | POLLHUP | POLLNVAL
+# define DEFAULT_EVENT POLLIN | POLLOUT | POLLHUP
 # define TIMEOUT_POLL 1000
 
 // Default value
 # define DEFAULT_SERVER_NAME "webserv"
-# define DEFAULT_BODY_LIMIT 4096
+# define DEFAULT_BODY_LIMIT 8192
 
 #endif /* __WEBSERV_HPP__ */

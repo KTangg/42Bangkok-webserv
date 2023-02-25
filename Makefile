@@ -42,3 +42,6 @@ fclean: clean
 
 re: fclean all
 
+
+client:
+	$(CC) $(CFLAGS) client.cpp -o client

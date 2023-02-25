@@ -35,28 +35,34 @@ Worker::~Worker() { }
 /// @brief Create, bind and listen to _address socket
 /// @return Server fd on success, -1 on error
 int Worker::init(void) {
+
+    std::string error_prefix = _name + " init";
+
+    std::vector<struct pollfd> empty_poll;
+    _poll = empty_poll;
+
     // Create new socket
     _listener = socket(AF_INET, SOCK_STREAM, 0);
     if (_listener == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
     // Set Socket option Remove address alreadys used for next time
     int yes = 1;
     if (setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
     // Bind fd to host:port
     if (bind(_listener, (struct sockaddr*)&_address, sizeof(_address)) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
     // Start listen to socket
     if (::listen(_listener, SOMAXCONN) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
@@ -64,7 +70,7 @@ int Worker::init(void) {
     fcntl(_listener, F_SETFL, O_NONBLOCK);
 
     // Add Listener poll to _poll
-    _M_add_poll(_listener, POLLIN | POLLNVAL);
+    _M_add_poll(_listener, POLLIN | POLL_HUP);
 
     // Set _status to be true as it ready to listen
     _status = true;
@@ -84,68 +90,86 @@ int Worker::listen(void) {
         std::cout << ":" << ntohs(_address.sin_port) << std::endl;
     }
 
+
     while (_status) {
 
         // Poll and check timeout to exit loop
         int poll_cnt = poll(_poll.data(), _poll.size(), TIMEOUT_POLL);
 
-        if (poll_cnt == -1) {
-            perror("Worker Listen");
+        if (poll_cnt < 0) {
+            std::string error_prefix = _name + " poll";
+            perror(error_prefix.c_str());
+
+            return ERROR;
+        } else if (poll_cnt == 0) {
+            std::cerr << _name << ": corrupted listener" << std::endl;
+
             return ERROR;
         }
 
-        for (iterator_poll it = _poll.begin(); it != _poll.end();) {
+        std::vector<int> add_fd;
+        std::vector<int> del_fd;
+
+        for (iterator_poll it = _poll.begin(); it != _poll.end(); ++it) {
             if (it->revents & POLLHUP) {
-                it = _M_del_poll(it);
-                continue;
-            } else if (it->revents & POLLNVAL) {
-                it = _M_del_poll(it);
-                continue;
-            } else {
-                if (it->revents & POLLIN) {
-                    if (it->fd == _listener) {
-                        _M_accept();
-                    } else {
-                        if (_M_request(it->fd) == ERROR) {
-                            it = _M_del_poll(it);
-                            continue;
-                        }
+                del_poll.push_back(*it);
+            } else if (it->revents & POLLIN) {
+                if (it->fd == _listener) {
+                    int accept_status = _M_accept(add_poll);
+                    if (accept_status == ERROR) {
+                        del_poll.push_back(_poll.front());
+                    }
+                } else {
+                    if (_M_request(it->fd) == ERROR) {
+                        std::cout << "Request" << std::endl;
+                        del_poll.push_back(*it);
                     }
                 }
-                if (it->revents & POLLOUT) {
+            } else if (it->revents & POLLOUT) {
                     if (_M_response(it->fd) == SUCCESS) {
-                        it = _M_del_poll(it);
-                        continue;
+                        del_poll.push_back(*it);
                     }
-                }
-                ++it;
             }
         }
+        _M_del_poll(del_fd);
+        del_poll.clear();
+
+        _M_add_poll(add_fd);
+        add_poll.clear();
     }
+
     return SUCCESS;
 }
 
 
-/// @brief Add fd to poll list
-/// @param fd fd to be listen
-/// @param events event to be listen
-void    Worker::_M_add_poll(int fd, short events) {
+void    Worker::_M_add_poll(std::vector<int> &add_fd, short events) {
     struct pollfd   new_poll;
 
     new_poll.fd = fd;
     new_poll.events = events;
     new_poll.revents = 0;
 
+    std::cout << "before size: " << _poll.size() << std::endl;
     _poll.push_back(new_poll);
+    std::cout << "after size: " << _poll.size() << std::endl;
 }
 
 
-/// @brief Delete fd from poll list
-/// @param it position of poll to be deleted
-iterator_poll   Worker::_M_del_poll(iterator_poll& it) {
-    std::cout << "Close: " << it->fd << std::endl;
-    close(it->fd);
-    return _poll.erase(it);
+void    Worker::_M_del_poll(std::vector<struct pollfd> del_poll) {
+
+    iterator_poll start_it = _poll.begin();
+    for (iterator_poll del_it = del_poll.begin(); del_it != del_poll.end(); ++del_it) {
+        for (iterator_poll it = start_it; it != _poll.end(); ++it) {
+            if (it->fd == del_it->fd) {
+                std::cout << "size: " << _poll.size() << std::endl;
+                start_it = _poll.erase(it);
+                std::cout << "size: " << _poll.size() << std::endl;
+                std::cout << "Close: " << it->fd << std::endl;
+                close(it->fd);
+                break;
+            }
+        }
+    }
 }
 
 
@@ -165,51 +189,54 @@ int     Worker::_S_keepalive(int socket) {
 }
 
 
-/// @brief Accept new incoming request move communication to another socket
-/// Add new socket to poll list
-void    Worker::_M_accept(void) {
+int Worker::_M_accept(std::vector<struct pollfd> &add_poll) {
     int         socket;
     sockaddr    addr_remote;
     socklen_t   addr_len;
 
     socket = accept(_listener, &addr_remote, &addr_len);
 
+    std::string error_prefix = _name + " accept";
     if (socket == -1) {
-        perror("Worker Accept");
+        if (errno != EWOULDBLOCK)
+        {
+            perror(error_prefix.c_str());
+            _status = false;
+        }
     } else {
         std::cout << "Accept: " << socket << std::endl;
         fcntl(socket, F_SETFL, O_NONBLOCK);
-        if (_S_keepalive(socket) != ERROR) {
-            _M_add_poll(socket);
-        }
+        _S_keepalive(socket);
+        add_poll.push_back()
     }
 }
 
 
-/// @brief Read data from socket and collect it as an request
-/// @param socket socket fd to be read from
-/// @return Socket fd on success, -1 on Error
 int     Worker::_M_request(int socket) {
     (void)socket;
-    std::cout << _limit << std::endl;
-    std::cout << _status << std::endl;
+    (void)_limit;
+    // std::cout << _limit << std::endl;
+    // std::cout << _status << std::endl;
 
     return SUCCESS;
 }
 
-
-/// @brief
-/// @param socket
-void    Worker::_M_response(int socket) {
+ 
+int    Worker::_M_response(int socket) {
     char buffer[1024];
 
     int fd = open("test.html", O_RDONLY);
 
     int ret = read(fd, buffer, 1024);
 
-    send(socket, buffer, ret, MSG_NOSIGNAL);
+#ifndef __APPLE__
+    send(socket, buffer, ret, MSG_NOSIGNAL | MSG_DONTWAIT);
+#else
+    signal(SIGPIPE, SIG_IGN);
+    send(socket, buffer, ret, MSG_DONTWAIT);
+#endif
 
     // _request.erase(socket);
 
-    return SUCCESS
+    return SUCCESS;
 }
