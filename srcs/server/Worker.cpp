@@ -6,11 +6,11 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:50 by spoolpra          #+#    #+#             */
-/*   Updated: 2022/10/07 10:56:59 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/01/01 11:04:32 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Worker.hpp"
+#include "server/Worker.hpp"
 
 
 /// @brief Initialize necessary attribute constructor
@@ -21,12 +21,12 @@
 /// @param route map<string, Route> define Route of this server
 Worker::Worker(
             const sockaddr_in_t&                address,
-            const std::map<std::string, Route>& route,
-            const std::map<int, std::string>&   error,
+            // const std::map<std::string, Route>& route,
+            // const std::map<int, std::string>&   error,
             const std::string&                  name,
             const size_t                        limit
         )
-: _address(address), _route(route), _error(error), _name(name), _limit(limit)
+: _address(address), _name(name), _limit(limit)
 { }
 
 /// @brief Deconstructor use to destroy object
@@ -66,6 +66,9 @@ int Worker::init(void) {
     // Add Listener poll to _poll
     _M_add_poll(_listener, POLLIN | POLLNVAL);
 
+    // Set _status to be true as it ready to listen
+    _status = true;
+
     return _listener;
 }
 
@@ -74,14 +77,14 @@ int Worker::init(void) {
 /// @return 0 on success, -1 on error
 int Worker::listen(void) {
 
-    bool status = true;
+    if (_status) {
+        // Print out listening information
+        std::cout << "Listening to http://";
+        std::cout << inet_ntoa(_address.sin_addr);
+        std::cout << ":" << ntohs(_address.sin_port) << std::endl;
+    }
 
-    // Print out listening information
-    std::cout << "Listening to http://";
-    std::cout << inet_ntoa(_address.sin_addr);
-    std::cout << ":" << ntohs(_address.sin_port) << std::endl;
-
-    while (status) {
+    while (_status) {
 
         // Poll and check timeout to exit loop
         int poll_cnt = poll(_poll.data(), _poll.size(), TIMEOUT_POLL);
@@ -91,35 +94,35 @@ int Worker::listen(void) {
             return ERROR;
         }
 
-        iterator_poll end = _poll.end();
-        for (iterator_poll it = _poll.begin(); it != end; ++it) {
+        for (iterator_poll it = _poll.begin(); it != _poll.end();) {
             if (it->revents & POLLHUP) {
                 it = _M_del_poll(it);
-                --it;
-                --end;
-            }
-            else if (it->revents & POLLIN) {
-                std::cout << "it in: " << it->fd << std::endl;
-                if (it->fd == _listener) {
-                    _M_accept();
-                } else {
-                    if (_M_recieve(it->fd) == ERROR) {
-                        it = _M_del_poll(it);
-                        --it;
-                        --end;
-                    }
-                }
-            } else if (it->revents & POLLOUT) {
-                std::cout << "it out: " << it->fd << std::endl;
-                _M_response(it->fd);
+                continue;
             } else if (it->revents & POLLNVAL) {
                 it = _M_del_poll(it);
-                --it;
-                --end;
+                continue;
+            } else {
+                if (it->revents & POLLIN) {
+                    if (it->fd == _listener) {
+                        _M_accept();
+                    } else {
+                        if (_M_request(it->fd) == ERROR) {
+                            it = _M_del_poll(it);
+                            continue;
+                        }
+                    }
+                }
+                if (it->revents & POLLOUT) {
+                    if (_M_response(it->fd) == SUCCESS) {
+                        it = _M_del_poll(it);
+                        continue;
+                    }
+                }
+                ++it;
             }
         }
     }
-    return 0;
+    return SUCCESS;
 }
 
 
@@ -186,11 +189,12 @@ void    Worker::_M_accept(void) {
 /// @brief Read data from socket and collect it as an request
 /// @param socket socket fd to be read from
 /// @return Socket fd on success, -1 on Error
-int     Worker::_M_recieve(int socket) {
+int     Worker::_M_request(int socket) {
     (void)socket;
     std::cout << _limit << std::endl;
     std::cout << _status << std::endl;
-    return 0;
+
+    return SUCCESS;
 }
 
 
@@ -205,5 +209,7 @@ void    Worker::_M_response(int socket) {
 
     send(socket, buffer, ret, MSG_NOSIGNAL);
 
-    _request.erase(socket);
+    // _request.erase(socket);
+
+    return SUCCESS
 }

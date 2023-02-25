@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2022/10/05 17:39:25 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/01/01 11:04:07 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ typedef std::vector<struct pollfd>::iterator iterator_poll;
 
 // Macro stuff
 # define ERROR -1
+# define SUCCESS 0
 # define DEFAULT_EVENT POLLIN | POLLOUT | POLLHUP | POLLNVAL
 # define TIMEOUT_POLL 1000
 
