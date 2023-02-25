@@ -57,9 +57,9 @@ class Worker {
         // std::map<int, Session>          _session;
 
         // Private Method
-        void            _M_add_poll(std::vector<int> &add_poll, short events = DEFAULT_EVENT);
-        void            _M_del_poll(std::vector<int> &del_poll);
-        int             _M_accept(void);
+        void            _M_add_poll(int socket, short events = DEFAULT_EVENT);
+        void            _M_del_poll(std::vector<int>& del_poll);
+        int             _M_accept(int& socket);
         int             _M_request(int socket);
         int             _M_response(int socket);
 

@@ -93,6 +93,12 @@ int Worker::listen(void) {
 
     while (_status) {
 
+        if (_poll.size() <= 0) {
+            std::cerr << _name << ": corrupted listener" << std::endl;
+
+            return ERROR;
+        }
+
         // Poll and check timeout to exit loop
         int poll_cnt = poll(_poll.data(), _poll.size(), TIMEOUT_POLL);
 
@@ -102,70 +108,64 @@ int Worker::listen(void) {
 
             return ERROR;
         } else if (poll_cnt == 0) {
-            std::cerr << _name << ": corrupted listener" << std::endl;
-
-            return ERROR;
+            continue;
         }
 
-        std::vector<int> add_fd;
+        int new_socket = ERROR;
         std::vector<int> del_fd;
 
         for (iterator_poll it = _poll.begin(); it != _poll.end(); ++it) {
             if (it->revents & POLLHUP) {
-                del_poll.push_back(*it);
+                del_fd.push_back(it->fd);
             } else if (it->revents & POLLIN) {
                 if (it->fd == _listener) {
-                    int accept_status = _M_accept(add_poll);
+                    int accept_status = _M_accept(new_socket);
                     if (accept_status == ERROR) {
-                        del_poll.push_back(_poll.front());
+                        del_fd.push_back(_listener);
                     }
                 } else {
                     if (_M_request(it->fd) == ERROR) {
-                        std::cout << "Request" << std::endl;
-                        del_poll.push_back(*it);
+                        del_fd.push_back(it->fd);
                     }
                 }
             } else if (it->revents & POLLOUT) {
                     if (_M_response(it->fd) == SUCCESS) {
-                        del_poll.push_back(*it);
+                        // del_fd.push_back(it->fd);
                     }
             }
         }
         _M_del_poll(del_fd);
-        del_poll.clear();
+        del_fd.clear();
 
-        _M_add_poll(add_fd);
-        add_poll.clear();
+        if (new_socket != ERROR) {
+            _M_add_poll(new_socket);
+        }
     }
 
     return SUCCESS;
 }
 
 
-void    Worker::_M_add_poll(std::vector<int> &add_fd, short events) {
+void    Worker::_M_add_poll(int socket, short events) {
     struct pollfd   new_poll;
 
-    new_poll.fd = fd;
+    new_poll.fd = socket;
     new_poll.events = events;
     new_poll.revents = 0;
 
-    std::cout << "before size: " << _poll.size() << std::endl;
     _poll.push_back(new_poll);
-    std::cout << "after size: " << _poll.size() << std::endl;
 }
 
 
-void    Worker::_M_del_poll(std::vector<struct pollfd> del_poll) {
+void    Worker::_M_del_poll(std::vector<int>& del_fd) {
 
     iterator_poll start_it = _poll.begin();
-    for (iterator_poll del_it = del_poll.begin(); del_it != del_poll.end(); ++del_it) {
+    for (std::vector<int>::iterator del_it = del_fd.begin(); del_it != del_fd.end(); ++del_it) {
         for (iterator_poll it = start_it; it != _poll.end(); ++it) {
-            if (it->fd == del_it->fd) {
-                std::cout << "size: " << _poll.size() << std::endl;
+            if (it->fd == *del_it) {
                 start_it = _poll.erase(it);
-                std::cout << "size: " << _poll.size() << std::endl;
-                std::cout << "Close: " << it->fd << std::endl;
-                close(it->fd);
+                std::cout << "Close: " << *del_it << std::endl;
+                close(*del_it);
                 break;
             }
         }
@@ -189,8 +189,7 @@ int     Worker::_S_keepalive(int socket) {
 }
 
 
-int Worker::_M_accept(std::vector<struct pollfd> &add_poll) {
-    int         socket;
+int Worker::_M_accept(int &socket) {
     sockaddr    addr_remote;
     socklen_t   addr_len;
 
@@ -203,20 +202,26 @@ int Worker::_M_accept(std::vector<struct pollfd> &add_poll) {
             perror(error_prefix.c_str());
             _status = false;
         }
+
+        return ERROR;
     } else {
         std::cout << "Accept: " << socket << std::endl;
         fcntl(socket, F_SETFL, O_NONBLOCK);
         _S_keepalive(socket);
-        add_poll.push_back()
+
+        return SUCCESS;
     }
 }
 
 
 int     Worker::_M_request(int socket) {
     (void)socket;
-    (void)_limit;
-    // std::cout << _limit << std::endl;
-    // std::cout << _status << std::endl;
+
+    char buffer[_limit];
+    int read_cnt = read(socket, buffer, _limit);
+
+    write(STDOUT_FILENO, buffer, read_cnt);
+    std::cout << read_cnt << std::endl;
 
     return SUCCESS;
 }
