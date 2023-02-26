@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/01/01 11:04:07 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/26 20:31:53 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 # include <cstdlib>
 # include <cstring>
 # include <iostream>
+# include <string>
+# include <sstream>
+# include <ctime>
 
 // Container
 # include <algorithm>
@@ -38,16 +41,21 @@
 
 // typedef alias
 typedef struct sockaddr_in  sockaddr_in_t;
-typedef std::vector<struct pollfd>::iterator iterator_poll;
+typedef struct std::basic_string<unsigned char> bytestring;
 
 // Macro stuff
 # define ERROR -1
 # define SUCCESS 0
 # define DEFAULT_EVENT POLLIN | POLLOUT | POLLHUP
 # define TIMEOUT_POLL 1000
+# define HTTP_VERSION "HTTP/1.1"
+# define CONTENT_HEADER_STR "\r\n\r\n"
+# define STR_TO_BYTE(x) reinterpret_cast<unsigned char*>(const_cast<char*>(x))
+# define BYTE_TO_VOID(x) reinterpret_cast<void *>(const_cast<unsigned char *>(x))
 
 // Default value
 # define DEFAULT_SERVER_NAME "webserv"
-# define DEFAULT_BODY_LIMIT 8192
+# define DEFAULT_BODY_LIMIT 102400
+# define DEFAULT_HEADER_RESERVE 512
 
 #endif /* __WEBSERV_HPP__ */

@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2022/12/31 15:12:25 by spoolpra         ###   ########.fr        #
+#    Updated: 2023/02/26 17:52:01 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,7 +19,9 @@ OBJ_DIR = objs/
 
 NAME = webserv
 SRCS =	main.cpp \
-		server/Worker.cpp
+		server/Worker.cpp \
+		component/Request.cpp component/Response.cpp \
+		component/Route.cpp
 
 INCS = -I includes/
 OBJS = $(SRCS:.cpp=.o)

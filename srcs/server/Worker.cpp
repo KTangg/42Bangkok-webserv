@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:50 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/01/01 11:04:32 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/26 20:27:57 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,13 +21,19 @@
 /// @param route map<string, Route> define Route of this server
 Worker::Worker(
             const sockaddr_in_t&                address,
-            // const std::map<std::string, Route>& route,
+            const route_map_t&                  route,
             // const std::map<int, std::string>&   error,
             const std::string&                  name,
             const size_t                        limit
         )
-: _address(address), _name(name), _limit(limit)
-{ }
+:   _address(address),
+    _route(route),
+    _name(name), 
+    _limit(limit)
+{ 
+    _poll.clear();
+    _request_map.clear();
+}
 
 /// @brief Deconstructor use to destroy object
 Worker::~Worker() { }
@@ -37,9 +43,6 @@ Worker::~Worker() { }
 int Worker::init(void) {
 
     std::string error_prefix = _name + " init";
-
-    std::vector<struct pollfd> empty_poll;
-    _poll = empty_poll;
 
     // Create new socket
     _listener = socket(AF_INET, SOCK_STREAM, 0);
@@ -115,6 +118,7 @@ int Worker::listen(void) {
         std::vector<int> del_fd;
 
         for (iterator_poll it = _poll.begin(); it != _poll.end(); ++it) {
+            
             if (it->revents & POLLHUP) {
                 del_fd.push_back(it->fd);
             } else if (it->revents & POLLIN) {
@@ -129,9 +133,7 @@ int Worker::listen(void) {
                     }
                 }
             } else if (it->revents & POLLOUT) {
-                    if (_M_response(it->fd) == SUCCESS) {
-                        // del_fd.push_back(it->fd);
-                    }
+                _M_response(it->fd);
             }
         }
         _M_del_poll(del_fd);
@@ -169,6 +171,10 @@ void    Worker::_M_del_poll(std::vector<int>& del_fd) {
                 break;
             }
         }
+
+        try {
+            _request_map.erase(*del_it);
+        } catch (std::out_of_range) { }
     }
 }
 
@@ -191,7 +197,7 @@ int     Worker::_S_keepalive(int socket) {
 
 int Worker::_M_accept(int &socket) {
     sockaddr    addr_remote;
-    socklen_t   addr_len;
+    socklen_t   addr_len = 0;
 
     socket = accept(_listener, &addr_remote, &addr_len);
 
@@ -215,33 +221,33 @@ int Worker::_M_accept(int &socket) {
 
 
 int     Worker::_M_request(int socket) {
-    (void)socket;
 
     char buffer[_limit];
-    int read_cnt = read(socket, buffer, _limit);
+    int read_cnt = recv(socket, buffer, _limit, 0);
 
-    write(STDOUT_FILENO, buffer, read_cnt);
-    std::cout << read_cnt << std::endl;
+    std::string request_string(buffer, read_cnt);
+    
+    try {
+        Request& exist_request = _request_map.at(socket);
+        exist_request.append_request(request_string);
+    } catch (std::out_of_range e) {
+        std::pair<int, Request> request_pair(socket, Request(_name, request_string));
+        _request_map.insert(request_pair);
+    }
 
     return SUCCESS;
 }
 
  
-int    Worker::_M_response(int socket) {
-    char buffer[1024];
-
-    int fd = open("test.html", O_RDONLY);
-
-    int ret = read(fd, buffer, 1024);
-
-#ifndef __APPLE__
-    send(socket, buffer, ret, MSG_NOSIGNAL | MSG_DONTWAIT);
-#else
-    signal(SIGPIPE, SIG_IGN);
-    send(socket, buffer, ret, MSG_DONTWAIT);
-#endif
-
-    // _request.erase(socket);
+int Worker::_M_response(int socket) const {
+    
+    try {
+        Request request = _request_map.at(socket);
+        Response response = request.process(_route);
+        response.response(socket);
+    } catch (std::out_of_range) {
+        return ERROR;
+    }
 
     return SUCCESS;
 }
