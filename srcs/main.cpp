@@ -6,11 +6,10 @@
 int main(void) {
 
     sockaddr_in_t                   address;
-    // std::map<std::string, Route>    route;
     // std::map<int, std::string>      error;
     route_map_t     route_map;
-    std::string path_1 = "tmp/html";
-    std::string path_2 = "tmp/image";
+    std::string path_1 = "/tmp/html/";
+    std::string path_2 = "/tmp/image/";
     Route route_1 = Route(path_1);
     Route route_2 = Route(path_2);
     route_map.insert(std::make_pair(path_1, route_1));

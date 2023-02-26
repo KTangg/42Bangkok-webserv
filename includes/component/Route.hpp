@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 17:42:57 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/26 23:16:23 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,27 +18,37 @@
 # include "webserv.hpp"
 
 
-// Other Class
+typedef std::map<std::string, std::string>                      cgi_map_t;
+typedef std::map<std::string, std::string>::iterator            iterator_cgi;
+typedef std::map<std::string, std::string>::const_iterator      const_iterator_cgi;
+
 
 class Route {
 
     public:
         // Initialize Constructor
         Route(
-            std::string                         root_path,
+            std::string                         root_path = "",
             std::vector<std::string>            allow_method = std::vector<std::string>(1, "GET"),
             bool                                redirect = false,
             std::string                         redirect_path = "",
             bool                                directory_listing = false,
             std::string                         default_file = "index.html",
             bool                                post_and_get = false,
-            std::map<std::string, std::string>  cgi_map = std::map<std::string, std::string>()  
+            cgi_map_t                           cgi_map = cgi_map_t()
         );
 
         // Deconstructor
         virtual ~Route();
 
         // Member function
+        std::string     get_path() const;
+        bool            is_allow(std::string& method) const;
+        bool            is_redirect() const;
+        std::string     get_redirect() const;
+        bool            is_listing() const;
+        std::string     get_default_file_name() const;
+        bool            is_post_and_get() const;
         
 
     private:
@@ -50,12 +60,16 @@ class Route {
         bool                                _directory_listing;
         std::string                         _default_file;
         bool                                _post_and_get;
-        std::map<std::string, std::string>  _cgi_map; 
+        std::map<std::string, std::string>  _cgi_map;
+
+        std::vector<std::string>            _route_directory;
         
         // Private method
 
 }; // class Route
 
-typedef std::map<std::string, Route, std::greater<std::string> > route_map_t;
+typedef std::map<std::string, Route, std::greater<std::string> >                    route_map_t;
+typedef std::map<std::string, Route, std::greater<std::string> >::iterator          iterator_route;
+typedef std::map<std::string, Route, std::greater<std::string> >::const_iterator    const_iterator_route;
 
 #endif /* __ROUTE_HPP__ */

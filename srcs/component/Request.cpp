@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/25 23:43:36 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 21:20:33 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/26 22:51:58 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,43 +26,69 @@ void    Request::append_request(std::string& request) {
 }
 
 
-Response    Request::process(const route_map_t& route) {
-    unsigned char a[] = "<h1>Bad Request</h1>";
-    unsigned char b[] = "<h1>Success</h1>";
-    (void)route;
+Response    Request::process(const route_map_t& route_map) {
     std::string http_version;
+    bytestring  content;
 
     size_t first_sep = _request.find(' ', 0);
     size_t second_sep = _request.find(' ', first_sep + 1);
-    size_t third_sep = _request.find('\n', second_sep + 1);
+    size_t third_sep = _request.find('\r', second_sep + 1);
     if (first_sep == std::string::npos \
             || second_sep == std::string::npos \
             || third_sep == std::string::npos
     ) {
-        return Response(
-            400,
-            _server_name,
-            a
-        );
+        return _M_error(HTTP_BAD_REQUEST);
     }
     try {
         _method = _request.substr(0, first_sep);
         _path = _request.substr(first_sep + 1, second_sep - first_sep - 1);
-        http_version = _request.substr(second_sep + 1, third_sep - second_sep - 2);
+        http_version = _request.substr(second_sep + 1, third_sep - second_sep - 1);
         if (http_version.compare(HTTP_VERSION) != 0) {
             throw std::out_of_range("Invalid HTTP request");
         }
     } catch (std::out_of_range) {
-        return Response(
-            400,
-            _server_name,
-            a
-        );
+        return _M_error(HTTP_BAD_REQUEST);
     }
+    
+    return _M_match_route_response(route_map);
+}
+
+
+Response    Request::_M_match_route_response(const route_map_t& route_map) const {
+    for (const_iterator_route it = route_map.begin(); it != route_map.end(); ++it) {
+
+        // TODO Matching algorithm array compare using '/' as delim
+        std::cout << "Compare: " << "( " << _path << ", " << it->first << " )" << std::endl;
+        std::string prefix = _path.substr(0, (it->first).size());
+        std::cout << "Prefix: " << std::endl;
+        if (prefix.compare(it->first) == 0) {
+            return _M_get_route_response(it->second);
+        }
+    }
+
+    return _M_error(HTTP_NOT_FOUND);
+}
+
+
+Response    Request::_M_error(const int status_code) const {
+    unsigned char   error[] = "TODO add dynamic error";
+    
     return Response(
-        200,
+        status_code,
         _server_name,
-        b
+        error
+    );
+}
+
+
+Response    Request::_M_get_route_response(const Route& route) const {
+    (void)route;
+    unsigned char   answer[] = "TODO add answer";
+
+    return Response(
+        HTTP_OK,
+        _server_name,
+        answer
     );
 }
 

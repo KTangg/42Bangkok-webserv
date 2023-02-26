@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 17:56:31 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/26 23:31:22 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ class Request {
         virtual ~Request();
 
         // Member function
-        void    append_request(std::string& request);
-        Response    process(const route_map_t& route);
+        void        append_request(std::string& request);
+        Response    process(const route_map_t& route_map);
 
     private:
         // Attributes
@@ -44,6 +44,9 @@ class Request {
         std::string _path;
 
         // Private method
+        Response    _M_error(const int status_code) const;
+        Response    _M_match_route_response(const route_map_t& route_map) const;
+        Response    _M_get_route_response(const Route& route) const;
 
 }; // class Request
 
