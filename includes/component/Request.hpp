@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 23:31:22 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:07:55 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,19 +27,19 @@ class Request {
 
     public:
         // Initialize Constructor
-        Request(const std::string& server_name, std::string& request);
+        Request(const std::string& server_name, bytestring& request);
 
         // Deconstructor
         virtual ~Request();
 
         // Member function
-        void        append_request(std::string& request);
+        void        append_request(bytestring& request);
         Response    process(const route_map_t& route_map);
 
     private:
         // Attributes
         std::string _server_name;
-        std::string _request;
+        bytestring  _request;
         std::string _method;
         std::string _path;
 

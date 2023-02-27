@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 11:54:08 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 18:49:50 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:14:52 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ Response::Response(
     :_status_code(status_code),
     _server_name(server_name),
     _content(content)
-    // _content_type(content_type)    
+    // _content_type(content_type)
 { }
 
 
@@ -49,36 +49,36 @@ bytestring  Response::_M_generate_response() {
     std::time_t     epoch_time = std::time(nullptr);
     char            time_string[sizeof("aaa, dd bb YYYY HH:MM:SS ZZZ") + 1];
     std::strftime(
-        time_string, 
+        time_string,
         sizeof(time_string),
         "%a, %d %b %Y %H:%M:%S %Z",
         std::gmtime(&epoch_time)
     );
 
     header.reserve(DEFAULT_HEADER_RESERVE);
-    header = header + STR_TO_BYTE(HTTP_VERSION);
-    header = header + STR_TO_BYTE(" ");
-    header = header + STR_TO_BYTE(std::to_string(_status_code).c_str());
-    header = header + STR_TO_BYTE(" ");
-    header = header + STR_TO_BYTE(status_code_map[_status_code].c_str());
-    header = header + STR_TO_BYTE("\n");
+    header = header + STR_TO_BYTES(HTTP_VERSION);
+    header = header + STR_TO_BYTES(" ");
+    header = header + STR_TO_BYTES(std::to_string(_status_code).c_str());
+    header = header + STR_TO_BYTES(" ");
+    header = header + STR_TO_BYTES(status_code_map[_status_code].c_str());
+    header = header + STR_TO_BYTES("\n");
 
-    header = header + STR_TO_BYTE("Server: ");
-    header = header + STR_TO_BYTE(_server_name.c_str());
-    header = header + STR_TO_BYTE("\n");
-    
-    header = header + STR_TO_BYTE("Date: ");
-    header = header + STR_TO_BYTE(time_string);
-    header = header + STR_TO_BYTE("\n");
+    header = header + STR_TO_BYTES("Server: ");
+    header = header + STR_TO_BYTES(_server_name.c_str());
+    header = header + STR_TO_BYTES("\n");
 
-    header = header + STR_TO_BYTE("Connection: keep-alive");
-    header = header + STR_TO_BYTE("\n");
-    
-    header = header + STR_TO_BYTE("Content-Length: ");
-    header = header + STR_TO_BYTE(std::to_string(_content.size()).c_str());
-    header = header + STR_TO_BYTE("\n");
+    header = header + STR_TO_BYTES("Date: ");
+    header = header + STR_TO_BYTES(time_string);
+    header = header + STR_TO_BYTES("\n");
 
-    header = header + STR_TO_BYTE("\n");
+    header = header + STR_TO_BYTES("Connection: keep-alive");
+    header = header + STR_TO_BYTES("\n");
+
+    header = header + STR_TO_BYTES("Content-Length: ");
+    header = header + STR_TO_BYTES(std::to_string(_content.size()).c_str());
+    header = header + STR_TO_BYTES("\n");
+
+    header = header + STR_TO_BYTES("\n");
 
     response_byte = header + _content;
     return response_byte;
@@ -99,7 +99,7 @@ void    Response::response(int socket) {
     bytestring response_byte = _M_generate_response();
     _M_send(
         socket,
-        BYTE_TO_VOID(response_byte.data()),
+        BYTES_TO_VOID(response_byte.data()),
         response_byte.size()
     );
 }

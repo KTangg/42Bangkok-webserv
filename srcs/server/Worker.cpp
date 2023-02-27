@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:50 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 20:27:57 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:07:48 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,9 @@ Worker::Worker(
         )
 :   _address(address),
     _route(route),
-    _name(name), 
+    _name(name),
     _limit(limit)
-{ 
+{
     _poll.clear();
     _request_map.clear();
 }
@@ -93,6 +93,7 @@ int Worker::listen(void) {
         std::cout << ":" << ntohs(_address.sin_port) << std::endl;
     }
 
+    std::vector<int> del_fd;
 
     while (_status) {
 
@@ -115,10 +116,9 @@ int Worker::listen(void) {
         }
 
         int new_socket = ERROR;
-        std::vector<int> del_fd;
 
         for (iterator_poll it = _poll.begin(); it != _poll.end(); ++it) {
-            
+
             if (it->revents & POLLHUP) {
                 del_fd.push_back(it->fd);
             } else if (it->revents & POLLIN) {
@@ -222,25 +222,25 @@ int Worker::_M_accept(int &socket) {
 
 int     Worker::_M_request(int socket) {
 
-    char buffer[_limit];
+    unsigned char   buffer[_limit];
     int read_cnt = recv(socket, buffer, _limit, 0);
 
-    std::string request_string(buffer, read_cnt);
-    
+    bytestring request_byte(buffer, read_cnt);
+
     try {
         Request& exist_request = _request_map.at(socket);
-        exist_request.append_request(request_string);
-    } catch (std::out_of_range e) {
-        std::pair<int, Request> request_pair(socket, Request(_name, request_string));
+        exist_request.append_request(request_byte);
+    } catch (std::out_of_range) {
+        std::pair<int, Request> request_pair(socket, Request(_name, request_byte));
         _request_map.insert(request_pair);
     }
 
     return SUCCESS;
 }
 
- 
+
 int Worker::_M_response(int socket) const {
-    
+
     try {
         Request request = _request_map.at(socket);
         Response response = request.process(_route);

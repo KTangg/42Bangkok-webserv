@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 23:16:23 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:55:57 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,8 @@ class Route {
         bool            is_listing() const;
         std::string     get_default_file_name() const;
         bool            is_post_and_get() const;
-        
+        bool            check_client_dir(const std::vector<std::string>& client_dir) const;
+
 
     private:
         // Attributes
@@ -63,7 +64,7 @@ class Route {
         std::map<std::string, std::string>  _cgi_map;
 
         std::vector<std::string>            _route_directory;
-        
+
         // Private method
 
 }; // class Route

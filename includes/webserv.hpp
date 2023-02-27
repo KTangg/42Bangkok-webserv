@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/02/26 22:09:27 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:37:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,9 @@ typedef struct std::basic_string<unsigned char> bytestring;
 # define SUCCESS            0
 # define DEFAULT_EVENT      POLLIN | POLLOUT | POLLHUP
 # define TIMEOUT_POLL       1000
-# define STR_TO_BYTE(x)     reinterpret_cast<unsigned char*>(const_cast<char*>(x))
-# define BYTE_TO_VOID(x)    reinterpret_cast<void *>(const_cast<unsigned char *>(x))
+# define STR_TO_BYTES(x)    reinterpret_cast<unsigned char*>(const_cast<char*>(x))
+# define BYTES_TO_STR(x)    reinterpret_cast<char *>(const_cast<unsigned char*>(x))
+# define BYTES_TO_VOID(x)   reinterpret_cast<void *>(const_cast<unsigned char*>(x))
 
 // Default value
 # define DEFAULT_SERVER_NAME    "webserv"
@@ -69,6 +70,9 @@ typedef struct std::basic_string<unsigned char> bytestring;
 # define HTTP_TOO_LARGE     413
 # define HTTP_SERVER_ERROR  500
 # define HTTP_NOT_SUPPORT   505
+
+// Function Prototypes
+std::vector<std::string>    parse_path_directory(std::string path);
 
 
 #endif /* __WEBSERV_HPP__ */
