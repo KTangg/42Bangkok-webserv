@@ -6,11 +6,11 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:50 by spoolpra          #+#    #+#             */
-/*   Updated: 2022/10/07 10:56:59 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:07:48 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Worker.hpp"
+#include "server/Worker.hpp"
 
 
 /// @brief Initialize necessary attribute constructor
@@ -21,13 +21,19 @@
 /// @param route map<string, Route> define Route of this server
 Worker::Worker(
             const sockaddr_in_t&                address,
-            const std::map<std::string, Route>& route,
-            const std::map<int, std::string>&   error,
+            const route_map_t&                  route,
+            // const std::map<int, std::string>&   error,
             const std::string&                  name,
             const size_t                        limit
         )
-: _address(address), _route(route), _error(error), _name(name), _limit(limit)
-{ }
+:   _address(address),
+    _route(route),
+    _name(name),
+    _limit(limit)
+{
+    _poll.clear();
+    _request_map.clear();
+}
 
 /// @brief Deconstructor use to destroy object
 Worker::~Worker() { }
@@ -35,28 +41,31 @@ Worker::~Worker() { }
 /// @brief Create, bind and listen to _address socket
 /// @return Server fd on success, -1 on error
 int Worker::init(void) {
+
+    std::string error_prefix = _name + " init";
+
     // Create new socket
     _listener = socket(AF_INET, SOCK_STREAM, 0);
     if (_listener == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
     // Set Socket option Remove address alreadys used for next time
     int yes = 1;
     if (setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
     // Bind fd to host:port
     if (bind(_listener, (struct sockaddr*)&_address, sizeof(_address)) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
     // Start listen to socket
     if (::listen(_listener, SOMAXCONN) == ERROR) {
-        perror("Worker Init");
+        perror(error_prefix.c_str());
         return ERROR;
     }
 
@@ -64,7 +73,10 @@ int Worker::init(void) {
     fcntl(_listener, F_SETFL, O_NONBLOCK);
 
     // Add Listener poll to _poll
-    _M_add_poll(_listener, POLLIN | POLLNVAL);
+    _M_add_poll(_listener, POLLIN | POLL_HUP);
+
+    // Set _status to be true as it ready to listen
+    _status = true;
 
     return _listener;
 }
@@ -74,62 +86,72 @@ int Worker::init(void) {
 /// @return 0 on success, -1 on error
 int Worker::listen(void) {
 
-    bool status = true;
+    if (_status) {
+        // Print out listening information
+        std::cout << "Listening to http://";
+        std::cout << inet_ntoa(_address.sin_addr);
+        std::cout << ":" << ntohs(_address.sin_port) << std::endl;
+    }
 
-    // Print out listening information
-    std::cout << "Listening to http://";
-    std::cout << inet_ntoa(_address.sin_addr);
-    std::cout << ":" << ntohs(_address.sin_port) << std::endl;
+    std::vector<int> del_fd;
 
-    while (status) {
+    while (_status) {
+
+        if (_poll.size() <= 0) {
+            std::cerr << _name << ": corrupted listener" << std::endl;
+
+            return ERROR;
+        }
 
         // Poll and check timeout to exit loop
         int poll_cnt = poll(_poll.data(), _poll.size(), TIMEOUT_POLL);
 
-        if (poll_cnt == -1) {
-            perror("Worker Listen");
+        if (poll_cnt < 0) {
+            std::string error_prefix = _name + " poll";
+            perror(error_prefix.c_str());
+
             return ERROR;
+        } else if (poll_cnt == 0) {
+            continue;
         }
 
-        iterator_poll end = _poll.end();
-        for (iterator_poll it = _poll.begin(); it != end; ++it) {
+        int new_socket = ERROR;
+
+        for (iterator_poll it = _poll.begin(); it != _poll.end(); ++it) {
+
             if (it->revents & POLLHUP) {
-                it = _M_del_poll(it);
-                --it;
-                --end;
-            }
-            else if (it->revents & POLLIN) {
-                std::cout << "it in: " << it->fd << std::endl;
+                del_fd.push_back(it->fd);
+            } else if (it->revents & POLLIN) {
                 if (it->fd == _listener) {
-                    _M_accept();
+                    int accept_status = _M_accept(new_socket);
+                    if (accept_status == ERROR) {
+                        del_fd.push_back(_listener);
+                    }
                 } else {
-                    if (_M_recieve(it->fd) == ERROR) {
-                        it = _M_del_poll(it);
-                        --it;
-                        --end;
+                    if (_M_request(it->fd) == ERROR) {
+                        del_fd.push_back(it->fd);
                     }
                 }
             } else if (it->revents & POLLOUT) {
-                std::cout << "it out: " << it->fd << std::endl;
                 _M_response(it->fd);
-            } else if (it->revents & POLLNVAL) {
-                it = _M_del_poll(it);
-                --it;
-                --end;
             }
         }
+        _M_del_poll(del_fd);
+        del_fd.clear();
+
+        if (new_socket != ERROR) {
+            _M_add_poll(new_socket);
+        }
     }
-    return 0;
+
+    return SUCCESS;
 }
 
 
-/// @brief Add fd to poll list
-/// @param fd fd to be listen
-/// @param events event to be listen
-void    Worker::_M_add_poll(int fd, short events) {
+void    Worker::_M_add_poll(int socket, short events) {
     struct pollfd   new_poll;
 
-    new_poll.fd = fd;
+    new_poll.fd = socket;
     new_poll.events = events;
     new_poll.revents = 0;
 
@@ -137,12 +159,23 @@ void    Worker::_M_add_poll(int fd, short events) {
 }
 
 
-/// @brief Delete fd from poll list
-/// @param it position of poll to be deleted
-iterator_poll   Worker::_M_del_poll(iterator_poll& it) {
-    std::cout << "Close: " << it->fd << std::endl;
-    close(it->fd);
-    return _poll.erase(it);
+void    Worker::_M_del_poll(std::vector<int>& del_fd) {
+
+    iterator_poll start_it = _poll.begin();
+    for (std::vector<int>::iterator del_it = del_fd.begin(); del_it != del_fd.end(); ++del_it) {
+        for (iterator_poll it = start_it; it != _poll.end(); ++it) {
+            if (it->fd == *del_it) {
+                start_it = _poll.erase(it);
+                std::cout << "Close: " << *del_it << std::endl;
+                close(*del_it);
+                break;
+            }
+        }
+
+        try {
+            _request_map.erase(*del_it);
+        } catch (std::out_of_range) { }
+    }
 }
 
 
@@ -162,48 +195,59 @@ int     Worker::_S_keepalive(int socket) {
 }
 
 
-/// @brief Accept new incoming request move communication to another socket
-/// Add new socket to poll list
-void    Worker::_M_accept(void) {
-    int         socket;
+int Worker::_M_accept(int &socket) {
     sockaddr    addr_remote;
-    socklen_t   addr_len;
+    socklen_t   addr_len = 0;
 
     socket = accept(_listener, &addr_remote, &addr_len);
 
+    std::string error_prefix = _name + " accept";
     if (socket == -1) {
-        perror("Worker Accept");
+        if (errno != EWOULDBLOCK)
+        {
+            perror(error_prefix.c_str());
+            _status = false;
+        }
+
+        return ERROR;
     } else {
         std::cout << "Accept: " << socket << std::endl;
         fcntl(socket, F_SETFL, O_NONBLOCK);
-        if (_S_keepalive(socket) != ERROR) {
-            _M_add_poll(socket);
-        }
+        _S_keepalive(socket);
+
+        return SUCCESS;
     }
 }
 
 
-/// @brief Read data from socket and collect it as an request
-/// @param socket socket fd to be read from
-/// @return Socket fd on success, -1 on Error
-int     Worker::_M_recieve(int socket) {
-    (void)socket;
-    std::cout << _limit << std::endl;
-    std::cout << _status << std::endl;
-    return 0;
+int     Worker::_M_request(int socket) {
+
+    unsigned char   buffer[_limit];
+    int read_cnt = recv(socket, buffer, _limit, 0);
+
+    bytestring request_byte(buffer, read_cnt);
+
+    try {
+        Request& exist_request = _request_map.at(socket);
+        exist_request.append_request(request_byte);
+    } catch (std::out_of_range) {
+        std::pair<int, Request> request_pair(socket, Request(_name, request_byte));
+        _request_map.insert(request_pair);
+    }
+
+    return SUCCESS;
 }
 
 
-/// @brief
-/// @param socket
-void    Worker::_M_response(int socket) {
-    char buffer[1024];
+int Worker::_M_response(int socket) const {
 
-    int fd = open("test.html", O_RDONLY);
+    try {
+        Request request = _request_map.at(socket);
+        Response response = request.process(_route);
+        response.response(socket);
+    } catch (std::out_of_range) {
+        return ERROR;
+    }
 
-    int ret = read(fd, buffer, 1024);
-
-    send(socket, buffer, ret, MSG_NOSIGNAL);
-
-    _request.erase(socket);
+    return SUCCESS;
 }

@@ -1,23 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Request.hpp                                        :+:      :+:    :+:   */
+/*   Master.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/10/07 10:41:16 by spoolpra          #+#    #+#             */
-/*   Updated: 2022/10/07 10:42:20 by spoolpra         ###   ########.fr       */
+/*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
+/*   Updated: 2023/02/26 10:03:07 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __REQUEST_HPP__
-# define __REQUEST_HPP__
-
-class Request {
-
-    public:
-        Request();
-
-}; // class Request
-
-#endif /* __REQUEST_HPP__ */

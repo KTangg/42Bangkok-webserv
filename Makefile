@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2022/10/07 10:50:42 by spoolpra         ###   ########.fr        #
+#    Updated: 2023/02/28 01:06:15 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,9 +19,11 @@ OBJ_DIR = objs/
 
 NAME = webserv
 SRCS =	main.cpp \
-		server/Worker.cpp
+		util.cpp \
+		server/Worker.cpp \
+		component/Request.cpp component/Response.cpp component/Route.cpp\
 
-INCS = -I includes/ -I srcs/server/
+INCS = -I includes/
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)
@@ -42,3 +44,6 @@ fclean: clean
 
 re: fclean all
 
+
+client:
+	$(CC) $(CFLAGS) client.cpp -o client

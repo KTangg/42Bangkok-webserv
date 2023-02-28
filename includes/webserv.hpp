@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2022/10/05 17:39:25 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/02/28 00:37:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 # include <cstdlib>
 # include <cstring>
 # include <iostream>
+# include <string>
+# include <sstream>
+# include <ctime>
 
 // Container
 # include <algorithm>
@@ -37,16 +40,39 @@
 # include <sys/socket.h>
 
 // typedef alias
-typedef struct sockaddr_in  sockaddr_in_t;
-typedef std::vector<struct pollfd>::iterator iterator_poll;
+typedef struct sockaddr_in                      sockaddr_in_t;
+typedef struct std::basic_string<unsigned char> bytestring;
 
 // Macro stuff
-# define ERROR -1
-# define DEFAULT_EVENT POLLIN | POLLOUT | POLLHUP | POLLNVAL
-# define TIMEOUT_POLL 1000
+# define ERROR              -1
+# define SUCCESS            0
+# define DEFAULT_EVENT      POLLIN | POLLOUT | POLLHUP
+# define TIMEOUT_POLL       1000
+# define STR_TO_BYTES(x)    reinterpret_cast<unsigned char*>(const_cast<char*>(x))
+# define BYTES_TO_STR(x)    reinterpret_cast<char *>(const_cast<unsigned char*>(x))
+# define BYTES_TO_VOID(x)   reinterpret_cast<void *>(const_cast<unsigned char*>(x))
 
 // Default value
-# define DEFAULT_SERVER_NAME "webserv"
-# define DEFAULT_BODY_LIMIT 4096
+# define DEFAULT_SERVER_NAME    "webserv"
+# define DEFAULT_BODY_LIMIT     102400
+# define DEFAULT_HEADER_RESERVE 512
+
+// HTTP define
+# define HTTP_VERSION       "HTTP/1.1"
+# define CONTENT_HEADER_STR "\r\n\r\n"
+# define HTTP_OK            200
+# define HTTP_REDIRECT      301
+# define HTTP_BAD_REQUEST   400
+# define HTTP_UNAUTH        401
+# define HTTP_NOT_FOUND     404
+# define HTTP_NOT_ALLOW     405
+# define HTTP_TIMEOUT       408
+# define HTTP_TOO_LARGE     413
+# define HTTP_SERVER_ERROR  500
+# define HTTP_NOT_SUPPORT   505
+
+// Function Prototypes
+std::vector<std::string>    parse_path_directory(std::string path);
+
 
 #endif /* __WEBSERV_HPP__ */
