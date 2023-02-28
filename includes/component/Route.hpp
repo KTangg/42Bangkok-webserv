@@ -19,8 +19,8 @@
 
 
 typedef std::map<std::string, std::string>                      cgi_map_t;
-typedef std::map<std::string, std::string>::iterator            iterator_cgi;
-typedef std::map<std::string, std::string>::const_iterator      const_iterator_cgi;
+typedef cgi_map_t::iterator                                     iterator_cgi;
+typedef cgi_map_t::const_iterator                               const_iterator_cgi;
 
 
 class Route {
@@ -28,8 +28,8 @@ class Route {
     public:
         // Initialize Constructor
         Route(
-            std::string                         root_path = "",
-            std::vector<std::string>            allow_method = std::vector<std::string>(1, "GET"),
+            list_str_t                          list_root_path,
+            list_str_t                          allow_method = list_str_t(1, "GET"),
             bool                                redirect = false,
             std::string                         redirect_path = "",
             bool                                directory_listing = false,
@@ -42,35 +42,37 @@ class Route {
         virtual ~Route();
 
         // Member function
-        std::string     get_path() const;
+        list_str_t      get_list_path() const;
         bool            is_allow(std::string& method) const;
         bool            is_redirect() const;
         std::string     get_redirect() const;
         bool            is_listing() const;
         std::string     get_default_file_name() const;
         bool            is_post_and_get() const;
-        bool            check_client_dir(const std::vector<std::string>& client_dir) const;
+        bool            check_client_dir(
+                            const list_str_t&   client_dir,
+                            const list_str_t&   list_route_path,
+                            list_str_t&         list_path_tail
+                        ) const;
 
 
     private:
         // Attributes
-        std::string                         _root_path;
-        std::vector<std::string>            _allow_method;
+        list_str_t                          _list_root_path;
+        list_str_t                          _allow_method;
         bool                                _redirect;
         std::string                         _redirect_path;
         bool                                _directory_listing;
         std::string                         _default_file;
         bool                                _post_and_get;
-        std::map<std::string, std::string>  _cgi_map;
-
-        std::vector<std::string>            _route_directory;
+        cgi_map_t                           _cgi_map;
 
         // Private method
 
 }; // class Route
 
-typedef std::map<std::string, Route, std::greater<std::string> >                    route_map_t;
-typedef std::map<std::string, Route, std::greater<std::string> >::iterator          iterator_route;
-typedef std::map<std::string, Route, std::greater<std::string> >::const_iterator    const_iterator_route;
+typedef std::map<list_str_t, Route, is_bigger<list_str_t> >                     route_map_t;
+typedef route_map_t::iterator                                                   iterator_route;
+typedef route_map_t::const_iterator                                             const_iterator_route;
 
 #endif /* __ROUTE_HPP__ */

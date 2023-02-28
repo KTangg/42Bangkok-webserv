@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2023/02/28 01:06:15 by spoolpra         ###   ########.fr        #
+#    Updated: 2023/03/01 00:14:28 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -46,4 +46,4 @@ re: fclean all
 
 
 client:
-	$(CC) $(CFLAGS) client.cpp -o client
+	$(CC) client.cpp -o client

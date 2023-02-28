@@ -46,7 +46,10 @@ class Request {
         // Private method
         Response    _M_error(const int status_code) const;
         Response    _M_match_route_response(const route_map_t& route_map) const;
-        Response    _M_get_route_response(const Route& route) const;
+        Response    _M_get_route_response(
+                        const Route& route,
+                        list_str_t& list_path_tail
+                        ) const;
 
 }; // class Request
 
