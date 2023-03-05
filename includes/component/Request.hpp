@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 07:35:36 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 15:55:14 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@
 
 # include "webserv.hpp"
 
-# include "component/Response.hpp"
 # include "component/Route.hpp"
 
 
@@ -33,12 +32,11 @@ class Request {
         bytestream*     getRequest() const;
         void            appendRequest(const bytestring& request);
 
-        bool            isStatusLine() const;
-        void            processStatusLine();
+        bool            isRequestLine() const;
+        void            processRequestLine();
         
-        bool            isReady() const;
-
-        http_status_t   getError() const;
+        bool            isHeaderEnd() const;
+        void            processHeader();
 
     private:
         bytestream*     _request;
@@ -46,13 +44,17 @@ class Request {
         std::string     _method;
         std::string     _path;
         std::string     _server;
-        bool            _status_line;
 
-        bool            _ready;
+        map_str_str_t   _header;
+        bool            _header_end;
+        size_t          _header_size;
+        std::string     _latest_header;
 
-        http_status_t   _error_code;
 
-        static bool     _S_validate_status_line(const l_str_t& l_content);
+        void            _M_process_header(const std::string& str, bool insert);
+        
+        static bool     _S_parse_header(std::pair<std::string, std::string>& item, const std::string& str);
+        static bool     _S_validate_request_line(const l_str_t& l_content);
         static void     _S_validate_method(const std::string& str);
         static void     _S_validate_path(const std::string& str);
         static bool     _S_validate_version(const std::string& str);

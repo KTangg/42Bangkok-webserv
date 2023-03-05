@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/04 00:00:43 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 12:12:39 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,9 +50,9 @@ class Route
 };
 
 
-typedef std::map<l_str_t, Route, is_bigger<l_str_t> >   map_route_t;
-typedef map_route_t::iterator                           iterator_route;
-typedef map_route_t::const_iterator                     const_iterator_route;
+typedef std::map<l_str_t, Route, ft::is_bigger<l_str_t> >   map_route_t;
+typedef map_route_t::iterator                               iterator_route;
+typedef map_route_t::const_iterator                         const_iterator_route;
 
 
 #endif

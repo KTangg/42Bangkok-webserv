@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/04 18:46:53 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 14:21:09 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,7 @@ class Master
         bool            _M_request(int socket);
 
         bool            _M_response(int socket);
-        bool            _M_process_status_line(int socket, Request& request);
-        // bool            _M_preprocess(int socket, Request& request);
-        // bool            _M_process(int socket, Request& request);
-
-        void            _M_error(int socket, const http_status_t& status_code);
+        bool            _M_process(int socket, Request& request, int stage);
 };
 
 

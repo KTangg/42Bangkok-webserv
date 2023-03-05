@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 07:19:16 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 17:45:16 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -255,17 +255,17 @@ bool    Master::_M_response(int socket)
     try
     {
         Request& request = _request_map.at(socket);
-        if (!request.isStatusLine())
+        if (!request.isRequestLine())
         {
-            alive = _M_process_status_line(socket, request);
+            alive = _M_process(socket, request, PROCESS_REQUEST_LINE);
         }
-        // else if (!request.isReady())
-        // {
-        //     alive = _M_preprocess(socket, request);
-        // }
+        else if (!request.isHeaderEnd())
+        {
+            alive = _M_process(socket, request, PROCESS_HEADER);
+        }
         // else
         // {
-        //     alive = _M_process(socket, request);
+        //     alive = _M_process(socket, request, PROCESS_CONTENT);
         // }
 
         return alive;
@@ -277,34 +277,29 @@ bool    Master::_M_response(int socket)
 }
 
 
-bool    Master::_M_process_status_line(int socket, Request& request)
+bool    Master::_M_process(int socket, Request& request, int stage)
 {
     try
     {
-        request.processStatusLine();
+        switch (stage)
+        {
+            case PROCESS_REQUEST_LINE:
+                request.processRequestLine();
+                break;
+            
+            case PROCESS_HEADER:
+                request.processHeader();
+                break;
+        }
 
         return true;
     }
-    catch (const ft::http_bad_request&)
+    catch (const ft::HttpException& e)
     {
-        _M_error(socket, HTTP_BAD_REQUEST);
+        bytestring  a;
+        e.send(socket, a);
     }
-    catch (const ft::http_not_support&)
-    {
-        _M_error(socket, HTTP_NOT_SUPPORT);
-    }
+
 
     return false;
-}
-
-
-void    Master::_M_error(int socket, const http_status_t& error_code)
-{
-    std::stringstream ss;
-
-    ss << "HTTP/1.1 " << error_code.first << " " << error_code.second << "\n" << "Server: KTangg\nDate: 10/10/10\nConnection: keep-alive\nContent-Length: 0\n\n";
-
-    std::string answer = ss.str();
-
-    ft::send(socket, answer.c_str(), answer.size());
 }

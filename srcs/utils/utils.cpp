@@ -6,9 +6,10 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 00:15:40 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 05:07:13 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 17:23:49 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "webserv.hpp"
 
@@ -119,23 +120,6 @@ size_t   ft::recv(int socket, void* buffer, size_t n)
 }
 
 
-l_str_t     ft::split(bytestream& src, unsigned char sep)
-{
-    l_str_t         arr_str;
-    bytestring      bstr;
-    
-    while (std::getline(src, bstr, sep))
-    {
-        if (!bstr.empty())
-        {
-            arr_str.push_back(BYTES_TO_STR(bstr.c_str()));
-        }
-    }
-    
-    return arr_str;
-}
-
-
 l_str_t     ft::split(bytestring& src, unsigned char sep)
 {
     l_str_t         arr_str;
@@ -151,4 +135,71 @@ l_str_t     ft::split(bytestring& src, unsigned char sep)
     }
     
     return arr_str;
+}
+
+
+l_str_t     ft::split(bytestring& src, unsigned char sep_1, unsigned char sep_2)
+{
+    l_str_t         arr_str;
+    bytestring      outer_bstr;
+    bytestring      inner_bstr;
+    bytestream      outer_bs(src);
+
+
+    while (std::getline(outer_bs, outer_bstr, sep_1))
+    {
+        bytestream      inner_bs(outer_bstr);
+        while (std::getline(inner_bs, inner_bstr, sep_2))
+        {
+            if (!inner_bstr.empty())
+            {
+                arr_str.push_back(BYTES_TO_STR(inner_bstr.c_str()));
+            }
+        }
+    }
+
+    return arr_str;
+}
+
+
+std::string     ft::strnow()
+{
+    std::time_t epoch_time = std::time(NULL);
+    char time_string[sizeof("aaa, dd bbb YYYY HH:MM:SS ZZZ")];
+
+    std::strftime(
+        time_string,
+        sizeof(time_string),
+        "%a, %d %b %Y %H:%M:%S %Z",
+        std::gmtime(&epoch_time)
+        );
+
+    return time_string;
+}
+
+
+std::string     ft::skip_ws(const std::string& str)
+{
+    for (size_t i = 0; i < str.size(); ++i)
+    {
+        if (str[i] != '\t' && str[i] != ' ')
+        {
+            return str.substr(i);
+        }
+    }
+
+    return std::string("");
+}
+
+
+std::string     ft::tolower(const std::string& str)
+{
+    std::string lower(str);
+
+    for (std::string::iterator it = lower.begin(); it != lower.end(); ++it)
+    {
+        *it = std::tolower(*it);
+    }
+
+    return lower;
 }

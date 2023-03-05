@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/25 23:43:36 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 08:15:35 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 17:36:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,10 @@ Request::Request(const bytestring& bstr)
   _method(),
   _path(),
   _server(),
-  _status_line(false),
-  _ready(false),
-  _error_code(HTTP_OK)
+  _header(),
+  _header_end(),
+  _header_size(),
+  _latest_header()
 { 
     _request = new bytestream(bstr);
 }
@@ -39,9 +40,10 @@ Request&    Request::operator=(const Request& rhs)
     _method = rhs._method;
     _path = rhs._path;
     _server = rhs._server;
-    _status_line = rhs._status_line;
-    _ready = rhs._ready;
-    _error_code = rhs._error_code;
+    _header = rhs._header;
+    _header_end = rhs._header_end;
+    _header_size = rhs._header_size;
+    _latest_header = rhs._latest_header;
 
     return *this;
 }
@@ -67,52 +69,170 @@ void    Request::appendRequest(const bytestring& new_byte)
 }
 
 
-bool    Request::isStatusLine() const
+bool    Request::isRequestLine() const
 {
-    return _status_line;
+    return !(_method.empty() || _path.empty());
 }
 
 
-void    Request::processStatusLine()
+void    Request::processRequestLine()
 {
     bytestring      line;
+    std::string     line_str;
+    bytepos         before_pos;
     bytepos         new_pos;
 
-    std::getline(*_request, line, CHAR_TO_BYYE('\n'));
-    l_str_t l_content = ft::split(line, CHAR_TO_BYYE(' '));
+    while (true)
+    {
+        before_pos = _request->tellg();
+        std::getline(*_request, line, CHAR_TO_BYYE('\n'));
+
+        line_str = BYTES_TO_STR(line.c_str());
+        if (!line_str.compare("\r") || line_str.empty())
+        {
+            if (_request->eof())
+            {
+                _request->clear();
+                _request->seekg(before_pos);
+                return ;
+            }
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (!std::isupper(line_str[0]))
+    {
+        std::cerr << "Request Line not start with upper" << std::endl;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
+    }
+    l_str_t l_content = ft::split(line, CHAR_TO_BYYE(' '), CHAR_TO_BYYE('\t'));
     
     if (_request->eof())
     {
-        _S_validate_status_line(l_content);
+        _S_validate_request_line(l_content);
         _request->clear();
-        _request->seekg(0, std::ios::beg);
+        _request->seekg(before_pos);
     }
     else
     {
-        if (!_S_validate_status_line(l_content))
+        if (!_S_validate_request_line(l_content))
         {
-            throw ft::http_bad_request();
+            std::cerr << "Incomplete Request status" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
         _method = l_content[0];
         _path = l_content[1];
-        _status_line = true;
     }
 }
 
 
-bool    Request::isReady() const
+bool    Request::isHeaderEnd() const
 {
-    return _ready;
+    return _header_end;
 }
 
 
-http_status_t   Request::getError() const
+void    Request::processHeader()
 {
-    return _error_code;
+    bytestring      line;
+    bytepos         before_pos;
+    
+    while (true)
+    {
+        before_pos = _request->tellg();
+        std::getline(*_request, line, CHAR_TO_BYYE('\n'));
+        std::string line_str = BYTES_TO_STR(line.c_str());
+    
+        if (_request->eof())
+        {
+            _request->clear();
+            _request->seekg(before_pos);
+            _M_process_header(line_str, false);
+            break;
+        }
+        else if (!line_str.compare("\r") || line_str.empty())
+        {
+            try
+            {
+                _header.at(HEADER_HOST);
+            }
+            catch (const std::out_of_range&)
+            {
+                std::cerr << "Missing HOST header" << std::endl;
+                throw ft::HttpException(HTTP_BAD_REQUEST);
+            }
+            _header_end = true;
+            break;
+        }
+        else
+        {
+            _M_process_header(line_str, true);
+        }
+    }
 }
 
 
-bool    Request::_S_validate_status_line(const l_str_t& l_content)
+void    Request::_M_process_header(const std::string& str, bool insert)
+{
+    size_t  str_size = str.size();
+    if (_header_size + str_size > DEFAULT_HTTP_LIMIT)
+    {
+        std::cerr << "Too Large header" << std::endl;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
+    }
+
+    if (str[0] == ' ' || str[0] == '\t')
+    {
+        std::string     value = ft::skip_ws(str);
+        if (!_latest_header.empty())
+        {
+            if (insert)
+            {
+                _header_size = _header_size + str_size;
+                try
+                {
+                    std::string& prev_val = _header.at(_latest_header);
+                    prev_val = prev_val + " " + value;
+                }
+                catch (const std::out_of_range&)
+                { }
+            }
+        }
+    }
+    else
+    {
+        bool    success;
+        std::pair<std::string, std::string>     item;
+
+        success = Request::_S_parse_header(item, str);
+        if (!success)
+        {
+            _latest_header = "";
+            _header_size = _header_size + str_size;
+        }
+        else if (insert)
+        {
+            _latest_header = item.first;
+            _header_size = _header_size + str_size;
+            try
+            {
+                _header.at(item.first);
+                std::cerr << "Duplicate header" << std::endl;
+                throw ft::HttpException(HTTP_BAD_REQUEST);
+            }
+            catch (const std::out_of_range&)
+            {
+                _header.insert(item);
+            }
+        }
+    }
+}
+
+
+bool    Request::_S_validate_request_line(const l_str_t& l_content)
 {
     int     i = 0;
     bool    complete = false;
@@ -133,7 +253,8 @@ bool    Request::_S_validate_status_line(const l_str_t& l_content)
         }
         else
         {
-            throw ft::http_bad_request();
+            std::cerr << "Too Many Request component" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
     }
 
@@ -147,7 +268,8 @@ void    Request::_S_validate_method(const std::string& str)
     {
         if (!std::isupper(*it))
         {
-            throw ft::http_bad_request();
+            std::cerr << "Lowercase method" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
     }
 }
@@ -157,7 +279,13 @@ void    Request::_S_validate_path(const std::string& str)
 {
     if (str[0] != '/')
     {
-        throw ft::http_bad_request();
+        std::cerr << "Path not start with /" << std::endl;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
+    }
+    else if (str.size() > DEFAULT_HTTP_LIMIT)
+    {
+        std::cerr << "URI too long" << std::endl;
+        throw ft::HttpException(HTTP_LONG_URI);
     }
 }
 
@@ -172,7 +300,8 @@ bool    Request::_S_validate_version(const std::string& str)
     {
         if (str.compare(0, str_size, prefix.c_str(), str_size))
         {
-            throw ft::http_bad_request();
+            std::cerr << "HTTP version not start with HTTP/" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
 
         return false;
@@ -181,26 +310,27 @@ bool    Request::_S_validate_version(const std::string& str)
     {
         if (str.compare(0, prefix_size, prefix.c_str(), prefix_size))
         {
-            throw ft::http_bad_request();
+            std::cerr << "HTTP version not start with HTTP/" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
         
         std::string v_str = str.substr(prefix.size());
         if (!std::isdigit(v_str[0]) || v_str[0] == '0')
         {
-            throw ft::http_bad_request();
+            std::cerr << "HTTP version 0" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
         double v = std::atof(v_str.c_str());
 
-        std::cout << "Compare: " << v << " vs " << 1.1 << std::endl;
-        std::cout << "Result: " << (v == 1.1) << std::endl;
-
         if (v < 1)
         {
-            throw ft::http_bad_request();
+            std::cerr << "HTTP version 0" << std::endl;
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
         else if (v > 1.1)
         {
-            throw ft::http_not_support();
+            std::cerr << "Not support version" << std::endl;
+            throw ft::HttpException(HTTP_NOT_SUPPORT);
         }
         int i = 0;
         for (std::string::const_iterator it = v_str.begin(); it != v_str.end(); ++it, ++i)
@@ -212,18 +342,25 @@ bool    Request::_S_validate_version(const std::string& str)
             {
                 if (c != '.')
                 {
-                    throw ft::http_bad_request();
+                    std::cerr << "HTTP version . " << std::endl;
+                    throw ft::HttpException(HTTP_BAD_REQUEST);
                 }
             }
             else
             {
                 if (!is_digit)
                 {
-                    throw ft::http_bad_request();
+                    if (c == '\r' && (it + 1) == v_str.end())
+                    {
+                        continue;
+                    }
+                    std::cerr << "HTTP version is not digit" << std::endl;
+                    throw ft::HttpException(HTTP_BAD_REQUEST);
                 }
                 else if (i > 4)
                 {
-                    throw ft::http_bad_request();
+                    std::cerr << "HTTP version too long" << std::endl;
+                    throw ft::HttpException(HTTP_BAD_REQUEST);
                 }
             }
         }
@@ -233,5 +370,31 @@ bool    Request::_S_validate_version(const std::string& str)
             return false;
         }
         return true;
+    }
+}
+
+
+bool    Request::_S_parse_header(std::pair<std::string, std::string>& item, const std::string& str)
+{
+    size_t  sep_pos;
+
+    sep_pos = str.find(':');
+    
+    if (sep_pos == std::string::npos || sep_pos == 0)
+    {
+        return false;
+    }
+    
+    item.first = ft::tolower(str.substr(0, sep_pos));
+    try
+    {
+        std::string buffer = str.substr(sep_pos + 1);
+        item.second = ft::skip_ws(buffer);
+
+        return true;
+    }
+    catch (const std::out_of_range&)
+    {
+        return false;
     }
 }

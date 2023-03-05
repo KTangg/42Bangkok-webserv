@@ -38,3 +38,10 @@ client
 
 # Objects directory
 objs
+
+# devcontainer
+.devcontainer/*
+
+# Test file
+request_file/*
+*test*
