@@ -1,42 +1,68 @@
 #include "webserv.hpp"
-#include "server/Worker.hpp"
+#include "server/Master.hpp"
 
 #define PORT 8080
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-
-    sockaddr_in_t address;
-    // std::map<int, std::string>      error;
-    route_map_t route_map;
-    list_str_t path_1 = parse_path_directory("/");
-    list_str_t root_1 = parse_path_directory("/var/www/html/");
-
-    list_str_t path_2 = parse_path_directory("/tmp/image/");
-    list_str_t root_2 = parse_path_directory("/var/www/html/image/");
-
-    list_str_t path_3 = parse_path_directory("/tmp/image/longer");
-    list_str_t root_3 = parse_path_directory("/var/www/image");
-    Route route_1 = Route(root_1);
-    Route route_2 = Route(root_2);
-    Route route_3 = Route(root_3);
-    route_map.insert(std::make_pair(path_1, route_1));
-    route_map.insert(std::make_pair(path_2, route_2));
-    route_map.insert(std::make_pair(path_3, route_3));
-
-    int port;
+    int         port;
+    std::string host;
     if (argc > 1)
     {
-        port = std::atoi(argv[1]);
+        host = argv[1];
+        port = atoi(argv[2]);
     }
     else
     {
+        host = "0.0.0.0";
         port = PORT;
     }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
-    Worker server = Worker(address, route_map);
-    server.init();
-    server.listen();
+
+    map_int_str_t   error_map;
+
+    error_map.insert(std::make_pair(401, "unauth"));
+    error_map.insert(std::make_pair(404, "Not found"));
+
+    map_route_t     route_map;
+
+    std::string route_path_1 = "/";
+    std::string root_path_1 = "/var/www/html";
+
+    std::string route_path_2 = "v2";
+    std::string root_path_2 = "/var/www/html2/";
+
+    Route   route_1 = Route(
+        ft::parse_path_directory(route_path_1),
+        ft::parse_path_directory(root_path_1)
+    );
+
+    Route   route_2 = Route(
+        ft::parse_path_directory(route_path_2),
+        ft::parse_path_directory(root_path_2)
+    );
+
+    route_map.insert(
+        std::make_pair(
+            ft::parse_path_directory(route_path_1),
+            route_1
+        )
+    );
+    route_map.insert(
+        std::make_pair(
+            ft::parse_path_directory(route_path_2),
+            route_2
+        )
+    );
+
+    MasterConfig    m_config = MasterConfig(host, port);
+    ServerConfig    w_config = ServerConfig(error_map, route_map);
+
+    m_config.addServer(w_config);
+    Master  a = Master(m_config);
+
+    bool x = a.init();
+    if (x)
+    {
+        a.listen();
+    }
 }

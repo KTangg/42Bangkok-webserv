@@ -6,125 +6,232 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/25 23:43:36 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/01 00:22:19 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/05 08:15:35 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #include "component/Request.hpp"
 
-Request::Request(const std::string &server_name, bytestring &request)
-    : _server_name(server_name), _request(request)
-{
+
+Request::Request(const bytestring& bstr)
+: _request(),
+  _method(),
+  _path(),
+  _server(),
+  _status_line(false),
+  _ready(false),
+  _error_code(HTTP_OK)
+{ 
+    _request = new bytestream(bstr);
 }
 
-Request::~Request() {}
 
-void Request::append_request(bytestring &request)
+Request::Request(const Request& rhs)
 {
-    _request = _request + request;
+    *this = rhs;
 }
 
-Response Request::process(const route_map_t &route_map)
-{
-    std::string http_version;
-    bytestring content;
 
-    size_t first_sep = _request.find(' ', 0);
-    size_t second_sep = _request.find(' ', first_sep + 1);
-    size_t third_sep = _request.find('\r', second_sep + 1);
-    if (first_sep == std::string::npos || second_sep == std::string::npos || third_sep == std::string::npos)
+Request&    Request::operator=(const Request& rhs)
+{
+    _request = new bytestream(rhs._request->str());
+    _method = rhs._method;
+    _path = rhs._path;
+    _server = rhs._server;
+    _status_line = rhs._status_line;
+    _ready = rhs._ready;
+    _error_code = rhs._error_code;
+
+    return *this;
+}
+
+
+Request::~Request() 
+{
+    delete _request;
+}
+
+
+bytestream*  Request::getRequest() const
+{
+    return _request;
+}
+
+
+void    Request::appendRequest(const bytestring& new_byte)
+{
+    _request->clear();
+    _request->seekp(0, std::ios::end);
+    _request->write(new_byte.c_str(), new_byte.size());
+}
+
+
+bool    Request::isStatusLine() const
+{
+    return _status_line;
+}
+
+
+void    Request::processStatusLine()
+{
+    bytestring      line;
+    bytepos         new_pos;
+
+    std::getline(*_request, line, CHAR_TO_BYYE('\n'));
+    l_str_t l_content = ft::split(line, CHAR_TO_BYYE(' '));
+    
+    if (_request->eof())
     {
-        return _M_error(HTTP_BAD_REQUEST);
+        _S_validate_status_line(l_content);
+        _request->clear();
+        _request->seekg(0, std::ios::beg);
     }
-    try
+    else
     {
-        _method = BYTES_TO_STR(
-            _request.substr(0, first_sep).c_str()
-            );
-        _path = BYTES_TO_STR(
-            _request.substr(first_sep + 1, second_sep - first_sep - 1).c_str()
-            );
-        http_version = BYTES_TO_STR(
-            _request.substr(second_sep + 1, third_sep - second_sep - 1).c_str()
-            );
-        if (http_version.compare(HTTP_VERSION) != 0)
+        if (!_S_validate_status_line(l_content))
         {
-            if (http_version.compare("HTTP/") == 0)
+            throw ft::http_bad_request();
+        }
+        _method = l_content[0];
+        _path = l_content[1];
+        _status_line = true;
+    }
+}
+
+
+bool    Request::isReady() const
+{
+    return _ready;
+}
+
+
+http_status_t   Request::getError() const
+{
+    return _error_code;
+}
+
+
+bool    Request::_S_validate_status_line(const l_str_t& l_content)
+{
+    int     i = 0;
+    bool    complete = false;
+
+    for (l_str_t::const_iterator it = l_content.begin(); it != l_content.end(); ++it, ++i)
+    {
+        if (i == 0)
+        {
+            _S_validate_method(*it);
+        }
+        else if (i == 1)
+        {
+            _S_validate_path(*it);
+        }
+        else if (i == 2)
+        {
+            complete = _S_validate_version(*it);
+        }
+        else
+        {
+            throw ft::http_bad_request();
+        }
+    }
+
+    return complete;
+}
+
+
+void    Request::_S_validate_method(const std::string& str)
+{
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+    {
+        if (!std::isupper(*it))
+        {
+            throw ft::http_bad_request();
+        }
+    }
+}
+
+
+void    Request::_S_validate_path(const std::string& str)
+{
+    if (str[0] != '/')
+    {
+        throw ft::http_bad_request();
+    }
+}
+
+
+bool    Request::_S_validate_version(const std::string& str)
+{
+    std::string     prefix = HTTP_SLASH;
+    size_t          str_size = str.size();
+    size_t          prefix_size = prefix.size();
+
+    if (str_size <= prefix_size)
+    {
+        if (str.compare(0, str_size, prefix.c_str(), str_size))
+        {
+            throw ft::http_bad_request();
+        }
+
+        return false;
+    }
+    else
+    {
+        if (str.compare(0, prefix_size, prefix.c_str(), prefix_size))
+        {
+            throw ft::http_bad_request();
+        }
+        
+        std::string v_str = str.substr(prefix.size());
+        if (!std::isdigit(v_str[0]) || v_str[0] == '0')
+        {
+            throw ft::http_bad_request();
+        }
+        double v = std::atof(v_str.c_str());
+
+        std::cout << "Compare: " << v << " vs " << 1.1 << std::endl;
+        std::cout << "Result: " << (v == 1.1) << std::endl;
+
+        if (v < 1)
+        {
+            throw ft::http_bad_request();
+        }
+        else if (v > 1.1)
+        {
+            throw ft::http_not_support();
+        }
+        int i = 0;
+        for (std::string::const_iterator it = v_str.begin(); it != v_str.end(); ++it, ++i)
+        {
+            char    c = *it;
+            int     is_digit = std::isdigit(c);
+
+            if (i == 1)
             {
-                throw std::invalid_argument("Invalid HTTP version");
+                if (c != '.')
+                {
+                    throw ft::http_bad_request();
+                }
             }
             else
             {
-                throw std::out_of_range("Invalid Header");
+                if (!is_digit)
+                {
+                    throw ft::http_bad_request();
+                }
+                else if (i > 4)
+                {
+                    throw ft::http_bad_request();
+                }
             }
         }
-    }
-    catch (std::out_of_range const&)
-    {
-        return _M_error(HTTP_BAD_REQUEST);
-    }
-    catch (std::invalid_argument const&)
-    {
-        return _M_error(HTTP_NOT_SUPPORT);
-    }
 
-    return _M_match_route_response(route_map);
-}
-
-Response Request::_M_match_route_response(const route_map_t &route_map) const
-{
-    list_str_t  client_list_path;
-    list_str_t  list_path_tail;
-
-    client_list_path = parse_path_directory(_path);
-
-    for (const_iterator_route it = route_map.begin(); it != route_map.end(); ++it)
-    {
-        bool valid_route = it->second.check_client_dir(
-                                client_list_path,
-                                it->first,
-                                list_path_tail
-                            );
-        if (valid_route)
+        if (i < 3)
         {
-            return _M_get_route_response(it->second, list_path_tail);
+            return false;
         }
+        return true;
     }
-
-    return _M_error(HTTP_NOT_FOUND);
-}
-
-Response Request::_M_error(const int status_code) const
-{
-    unsigned char error[] = "TODO add dynamic error";
-
-    return Response(
-        status_code,
-        _server_name,
-        error
-        );
-}
-
-Response Request::_M_get_route_response(
-            const Route &route,
-            list_str_t& list_path_tail
-            ) const
-{
-    list_str_t list_full_path = join_list(route.get_list_path(), list_path_tail);
-
-    std::string path_to_file = path_join(list_full_path);
-    bytestring answer = STR_TO_BYTES((std::string("Response from ") + path_to_file).c_str());
-
-    struct stat stat_meta;
-
-    if (stat(path_to_file.c_str(), &stat_meta) == 0)
-    {
-        return Response(
-            HTTP_OK,
-            _server_name,
-            answer
-            );
-    }
-
-    return _M_error(HTTP_NOT_FOUND);
 }
