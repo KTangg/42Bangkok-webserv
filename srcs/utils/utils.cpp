@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 00:15:40 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 17:23:49 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/06 16:57:40 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,17 +59,15 @@ l_str_t ft::join_list(const l_str_t& a, const l_str_t& b)
 }
 
 
-std::string ft::path_join(const l_str_t& list_path)
+std::string ft::path_join(l_str_t::const_iterator first, l_str_t::const_iterator last)
 {
     std::string path = "/";
 
-    for (l_str_t::const_iterator it = list_path.begin();
-         it != list_path.end();
-         ++it
-        )
+    for (l_str_t::const_iterator it = first; it != last; ++it)
     {
         path = path + (*it);
-        if (it != (list_path.end() - 1)){
+        if (it != (last - 1))
+        {
             path = path + "/";
         }
     }
@@ -92,9 +90,9 @@ bool    ft::is_number(const std::string& s)
 }
 
 
-size_t   ft::send(int socket, const void* buffer, size_t n)
+ssize_t   ft::send(int socket, const void* buffer, size_t n)
 {
-    size_t  ret;
+    ssize_t  ret;
     
 #ifdef __APPLE__
     ret = ::send(socket, buffer, n, MSG_DONTWAIT);
@@ -106,9 +104,9 @@ size_t   ft::send(int socket, const void* buffer, size_t n)
 }
 
 
-size_t   ft::recv(int socket, void* buffer, size_t n)
+ssize_t   ft::recv(int socket, void* buffer, size_t n)
 {
-    size_t ret;
+    ssize_t ret;
 
 #ifdef __APPLE__
     ret = ::recv(socket, buffer, n, MSG_DONTWAIT);
@@ -202,4 +200,16 @@ std::string     ft::tolower(const std::string& str)
     }
 
     return lower;
+}
+
+
+ssize_t      ft::hex_to_dec(const std::string& str)
+{
+    std::stringstream ss(str);
+
+    ssize_t  nb;
+
+    ss >> std::hex >> nb;
+
+    return nb;
 }

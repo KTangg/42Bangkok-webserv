@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 16:58:25 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/04 04:25:03 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/06 17:11:10 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,4 +30,30 @@ ServerConfig::ServerConfig(
 std::string     ServerConfig::getServerName() const
 {
     return _server_name;
+}
+
+
+size_t          ServerConfig::getLimit() const
+{
+    return _body_limit;
+}
+
+
+const Route*    ServerConfig::searchRoute(const std::string& path) const
+{
+    for (const_iterator_route it = _route_map.begin(); it != _route_map.end(); ++it)
+    {
+        try
+        {
+            it->second.findPath(path);
+
+            return &(it->second);
+        }
+        catch (const std::invalid_argument&)
+        {
+            continue;
+        }
+    }
+
+    return NULL;
 }

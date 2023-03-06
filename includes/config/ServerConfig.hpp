@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 16:07:09 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/04 04:24:20 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/06 17:10:15 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@ class ServerConfig
         virtual ~ServerConfig() { };
 
         std::string     getServerName() const;
+        size_t          getLimit() const;
+
+        const Route*    searchRoute(const std::string& path) const;
 
     protected:
         const map_int_str_t _error_path_map;

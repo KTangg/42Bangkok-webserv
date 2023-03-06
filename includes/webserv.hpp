@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 17:46:03 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/06 17:06:21 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,20 +73,22 @@ typedef std::map<std::string, std::string>              map_str_str_t;
 # define SERVER_VERSION         "KTangg/1.0.0"
 # define DEFAULT_EVENT          POLLIN | POLLOUT
 # define DEFAULT_SERVER_NAME    ""
-# define DEFAULT_BUFFER_SIZE    8192
-# define DEFAULT_BODY_LIMIT     102400
+# define DEFAULT_BUFFER_SIZE    102400
+# define DEFAULT_BODY_LIMIT     8192
 # define DEFAULT_HTTP_LIMIT     8192
 # define PROCESS_REQUEST_LINE   0
 # define PROCESS_HEADER         1
-# define PROCESS_REQUEST        2
+# define PROCESS_CONTENT        2
+# define PROCESS_REQUEST        3
+
 
 // HTTP define
 # define GET                    "GET"
 # define POST                   "POST"
 # define DELETE                 "DELETE"
+# define CHUNK_ENCODE           "chunked"
 # define HTTP_SLASH             "HTTP/"
 # define HTTP_VERSION           1.1
-# define HEADER_HOST            "host"
 # define HTTP_OK                http_status_t(200, "OK")
 # define HTTP_CONTINUE          http_status_t(100, "Continue")
 # define HTTP_CREATED           http_status_t(201, "Created")
@@ -97,11 +99,17 @@ typedef std::map<std::string, std::string>              map_str_str_t;
 # define HTTP_FORBIDDEN         http_status_t(403, "Forbidden")
 # define HTTP_NOT_FOUND         http_status_t(404, "Not Found")
 # define HTTP_NOT_ALLOW         http_status_t(405, "Method Not Allowed")
-# define HTTP_LENGTH_REQ        http_status_t(411, "Length Required")
+# define HTTP_TOO_LARGE         http_status_t(413, "Request Entity Too Large")
 # define HTTP_LONG_URI          http_status_t(414, "URI Too Long")
+# define HTTP_UNSUPPORT_MEDIA   http_status_t(415, "Unsupported Media Type")
 # define HTTP_SERVER_ERROR      http_status_t(500, "Internal Server Error")
-# define HTTP_NOT_SUPPORT       http_status_t(505, "HTTP Version Not Supported")
+# define HTTP_UNSUPPORT_VERSION http_status_t(505, "HTTP Version Not Supported")
 
+
+// Header define
+# define HEADER_HOST                "host"
+# define HEADER_TRANSFER_ENCODE     "transfer-encoding"
+# define HEADER_CONTENT_LENGTH      "content-length"
 
 
 // ft namespace
@@ -109,25 +117,26 @@ namespace ft
 {
     l_str_t         parse_path_directory(std::string path);
     l_str_t         join_list(const l_str_t& a, const l_str_t& b);
-    std::string     path_join(const l_str_t& l_path);
+    std::string     path_join(l_str_t::const_iterator first, l_str_t::const_iterator last);
     bool            is_number(const std::string& s);
-    size_t          send(int socket, const void* buffer, size_t n);
-    size_t          recv(int socket, void* buffer, size_t n);
+    ssize_t         send(int socket, const void* buffer, size_t n);
+    ssize_t         recv(int socket, void* buffer, size_t n);
     l_str_t         split(bytestring& bstr, unsigned char sep);
     l_str_t         split(bytestring& src, unsigned char sep_1, unsigned char sep_2);
     std::string     strnow();
     std::string     skip_ws(const std::string& str);
     std::string     tolower(const std::string& str);
+    ssize_t         hex_to_dec(const std::string& str);
 
 
-    template <typename T>
-    struct is_bigger
-    {
-        bool operator()(const T& x, const T& y) const
-        {
-            return x.size() > y.size();
-        }
-    };
+    // template <typename T>
+    // struct is_bigger
+    // {
+    //     bool operator()(const T& x, const T& y) const
+    //     {
+    //         return x.size() > y.size();
+    //     }
+    // };
 
 
     class HttpException : public std::exception

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/05 17:45:16 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/06 16:04:08 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,7 +131,7 @@ void    Master::_M_del_poll(const std::vector<int>& del_fd)
             if (it->fd == *del_it)
             {
                 start_it = _poll_list.erase(it);
-                std::cout << "Close: " << *del_it << std::endl;
+                std::cerr << "Close: " << *del_it << std::endl;
                 close(*del_it);
                 break;
             }
@@ -147,7 +147,7 @@ int     Master::_M_listen(std::vector<int>& del_fd)
     int     new_socket = -1;
     bool    alive;
 
-    for (iterator_poll it = _poll_list.begin(); it != _poll_list.end(); ++it)
+    for (const_iterator_poll it = _poll_list.begin(); it != _poll_list.end(); ++it)
     {
         if (it->revents & POLLHUP \
             || it->revents & POLLERR \
@@ -157,7 +157,7 @@ int     Master::_M_listen(std::vector<int>& del_fd)
             del_fd.push_back(it->fd);
             continue;
         }
-        if (it->revents & POLLIN)
+        else if (it->revents & POLLIN)
         {
             if (it->fd == _listener)
             {
@@ -178,7 +178,7 @@ int     Master::_M_listen(std::vector<int>& del_fd)
                 }
             }
         }
-        if (it->revents & POLLOUT)
+        else if (it->revents & POLLOUT)
         {
             alive = _M_response(it->fd);
             if (!alive)
@@ -192,7 +192,7 @@ int     Master::_M_listen(std::vector<int>& del_fd)
 }
 
 
-bool    Master::_M_accept(int& socket)
+bool    Master::_M_accept(int& socket) const
 {
     sockaddr    addr_remote;
     socklen_t   addr_len = 0;
@@ -210,7 +210,7 @@ bool    Master::_M_accept(int& socket)
     }
     else
     {
-        std::cout << "Accept: " << socket << std::endl;
+        std::cerr << "Accept: " << socket << std::endl;
 #ifdef __APPLE__
         fcntl(socket, F_SETFL, O_NONBLOCK);
 #endif
@@ -224,8 +224,8 @@ bool    Master::_M_request(int socket)
 {
     unsigned char   buffer[DEFAULT_BUFFER_SIZE];
 
-    size_t ret = ft::recv(socket, buffer, DEFAULT_BUFFER_SIZE);
-    if (ret == 0)
+    ssize_t ret = ft::recv(socket, buffer, DEFAULT_BUFFER_SIZE);
+    if (ret <= 0)
     {
         return false;
     }
@@ -255,6 +255,7 @@ bool    Master::_M_response(int socket)
     try
     {
         Request& request = _request_map.at(socket);
+        
         if (!request.isRequestLine())
         {
             alive = _M_process(socket, request, PROCESS_REQUEST_LINE);
@@ -263,10 +264,15 @@ bool    Master::_M_response(int socket)
         {
             alive = _M_process(socket, request, PROCESS_HEADER);
         }
-        // else
-        // {
-        //     alive = _M_process(socket, request, PROCESS_CONTENT);
-        // }
+        else if (!request.isContentEnd())
+        {
+            alive = _M_process(socket, request, PROCESS_CONTENT);
+        }
+        else
+        {
+            // alive = _M_process(socket, request, PROCESS_REQUEST);
+            std::cout << BYTES_TO_STR(request.getRequest()->str().c_str()) << std::endl;
+        }
 
         return alive;
     }
@@ -289,6 +295,17 @@ bool    Master::_M_process(int socket, Request& request, int stage)
             
             case PROCESS_HEADER:
                 request.processHeader();
+                if (request.isHeaderEnd())
+                {
+                    request.setConfig(
+                        _M_match_config(request.getServer())
+                    );
+                    request.postHeaderValidate();
+                }
+                break;
+            
+            case PROCESS_CONTENT:
+                request.processContent();
                 break;
         }
 
@@ -302,4 +319,18 @@ bool    Master::_M_process(int socket, Request& request, int stage)
 
 
     return false;
+}
+
+
+const ServerConfig*   Master::_M_match_config(const std::string& server_name)
+{
+    for (const_iterator_server it = _server_map.begin(); it != _server_map.end(); ++it)
+    {
+        if (!server_name.compare(it->first))
+        {
+            return &(it->second);
+        }
+    }
+
+    return &(_server_map.begin()->second);
 }

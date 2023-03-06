@@ -23,33 +23,21 @@ int main(int argc, char* argv[])
 
     map_route_t     route_map;
 
-    std::string route_path_1 = "/";
+    std::string route_path_1 = "/v1";
     std::string root_path_1 = "/var/www/html";
 
     std::string route_path_2 = "v2";
     std::string root_path_2 = "/var/www/html2/";
 
-    Route   route_1 = Route(
-        ft::parse_path_directory(route_path_1),
-        ft::parse_path_directory(root_path_1)
-    );
+    Route   route_1 = Route(route_path_1, root_path_1);
 
-    Route   route_2 = Route(
-        ft::parse_path_directory(route_path_2),
-        ft::parse_path_directory(root_path_2)
-    );
+    Route   route_2 = Route(route_path_2, root_path_2);
 
     route_map.insert(
-        std::make_pair(
-            ft::parse_path_directory(route_path_1),
-            route_1
-        )
+        std::make_pair(route_path_1, route_1)
     );
     route_map.insert(
-        std::make_pair(
-            ft::parse_path_directory(route_path_2),
-            route_2
-        )
+        std::make_pair(route_path_2, route_2)
     );
 
     MasterConfig    m_config = MasterConfig("0.0.0.0", port);
