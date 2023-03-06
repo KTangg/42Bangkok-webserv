@@ -9,12 +9,10 @@ int main(int argc, char* argv[])
     std::string host;
     if (argc > 1)
     {
-        host = argv[1];
-        port = atoi(argv[2]);
+        port = atoi(argv[1]);
     }
     else
     {
-        host = "0.0.0.0";
         port = PORT;
     }
 
@@ -54,7 +52,7 @@ int main(int argc, char* argv[])
         )
     );
 
-    MasterConfig    m_config = MasterConfig(host, port);
+    MasterConfig    m_config = MasterConfig("0.0.0.0", port);
     ServerConfig    w_config = ServerConfig(error_map, route_map);
 
     m_config.addServer(w_config);
