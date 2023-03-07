@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:06:21 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/07 05:41:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,13 +80,13 @@ typedef std::map<std::string, std::string>              map_str_str_t;
 # define PROCESS_HEADER         1
 # define PROCESS_CONTENT        2
 # define PROCESS_REQUEST        3
+# define PROCESS_RESPONSE       4
 
 
 // HTTP define
 # define GET                    "GET"
 # define POST                   "POST"
 # define DELETE                 "DELETE"
-# define CHUNK_ENCODE           "chunked"
 # define HTTP_SLASH             "HTTP/"
 # define HTTP_VERSION           1.1
 # define HTTP_OK                http_status_t(200, "OK")
@@ -102,6 +102,7 @@ typedef std::map<std::string, std::string>              map_str_str_t;
 # define HTTP_TOO_LARGE         http_status_t(413, "Request Entity Too Large")
 # define HTTP_LONG_URI          http_status_t(414, "URI Too Long")
 # define HTTP_UNSUPPORT_MEDIA   http_status_t(415, "Unsupported Media Type")
+# define HTTP_TEAPOT            http_status_t(418, "I'm a teapot")
 # define HTTP_SERVER_ERROR      http_status_t(500, "Internal Server Error")
 # define HTTP_UNSUPPORT_VERSION http_status_t(505, "HTTP Version Not Supported")
 
@@ -110,6 +111,12 @@ typedef std::map<std::string, std::string>              map_str_str_t;
 # define HEADER_HOST                "host"
 # define HEADER_TRANSFER_ENCODE     "transfer-encoding"
 # define HEADER_CONTENT_LENGTH      "content-length"
+# define HEADER_CONNECTION          "connection"
+
+// Header value
+# define CHUNK_ENCODE               "chunked"
+# define CONNECTION_CLOSE           "close"
+# define CONNECTION_ALIVE           "keep-alive"
 
 
 // ft namespace
