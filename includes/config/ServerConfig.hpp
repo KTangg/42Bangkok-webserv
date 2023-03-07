@@ -6,48 +6,60 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 16:07:09 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:10:15 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/07 19:24:29 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#ifndef __WORKER_CONFIG_HPP__
-# define __WORKER_CONFIG_HPP__
+#ifndef __SERVER_CONFIG_HPP__
+# define __SERVER_CONFIG_HPP__
 
 
-#include "webserv.hpp"
+# include "webserv.hpp"
 
-#include "component/Route.hpp"
+# include "component/Route.hpp"
+
+
+typedef std::map<int, std::string>      map_error_t;
+typedef map_error_t::iterator           it_error;
+typedef map_error_t::const_iterator     const_it_error;
 
 
 class ServerConfig
 {
     public:
         ServerConfig(
-            const map_int_str_t&    error_path_map,
-            const map_route_t&      route_map,
-            const std::string&      server_name = DEFAULT_SERVER_NAME,
-            const size_t&           body_limit = DEFAULT_BODY_LIMIT
+            const std::string&      host,
+            const std::string&      name = DEFAULT_SERVER_NAME,
+            const size_t&           limit = DEFAULT_BODY_LIMIT,
+            const map_error_t&      error_map = map_error_t(),
+            const map_route_t&      route_map = map_route_t()
         );
+        ServerConfig(const ServerConfig& rhs);
+        ServerConfig& operator=(const ServerConfig& rhs);
 
-        virtual ~ServerConfig() { };
+        virtual ~ServerConfig();
 
-        std::string     getServerName() const;
-        size_t          getLimit() const;
+        std::string         getHost() const;
+        std::string         getName() const;
+        size_t              getLimit() const;
+        const std::string&  searchError(const int code) const;
+        const Route&        searchRoute(const std::string& path) const;
 
-        const Route*    searchRoute(const std::string& path) const;
+    private:
+        ServerConfig();
 
-    protected:
-        const map_int_str_t _error_path_map;
-        const map_route_t   _route_map;
-        const std::string   _server_name;
-        const size_t        _body_limit;
+        std::string     _host;
+        std::string     _name;
+        size_t          _limit;
+        map_error_t   _error_map;
+        map_route_t     _route_map;
 };
 
 
-typedef std::map<std::string, ServerConfig>     map_server_t;
-typedef map_server_t::iterator                  iterator_server;
-typedef map_server_t::const_iterator            const_iterator_server;
+typedef std::vector<ServerConfig>   v_server_t;
+typedef v_server_t::iterator        it_server;
+typedef v_server_t::const_iterator  const_it_server;
 
 
 #endif

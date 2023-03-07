@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2023/03/05 17:45:47 by spoolpra         ###   ########.fr        #
+#    Updated: 2023/03/07 20:22:38 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,8 +21,7 @@ NAME = webserv
 SRCS =	main.cpp \
 		utils/utils.cpp utils/HttpException.cpp \
 		config/MasterConfig.cpp config/ServerConfig.cpp \
-		server/Master.cpp \
-		component/Route.cpp component/Request.cpp \
+		component/Header.cpp component/Route.cpp \
 
 INCS = -I includes/
 OBJS = $(SRCS:.cpp=.o)
