@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 16:08:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:01:04 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/07 06:59:25 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,9 +73,10 @@ std::string     Route::findPath(const std::string& path) const
         {
             throw std::invalid_argument("");
         }
+        ++it_path;
     }
 
-    std::string add_path = ft::path_join(it_path, l_path.end());
+    std::string add_path = ft::path_join(l_path.begin(), l_path.end());
 
     return _root_path + add_path;
 }
