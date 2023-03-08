@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 16:04:08 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 17:26:29 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,15 @@
 
 
 Master::Master(const MasterConfig& config)
-: _address(config.getAddress()),
-  _server_map(config.getServerConfig()),
-  _listener(-1),
-  _listening(false),
-  _poll_list(),
-  _request_map()
-{ }
+{
+    _address = config.getAddress();
+    _server_v = config.getServerConfig();
+
+    _listener = -1;
+    _poll_v = v_poll_t();
+    _request_map = map_request_t();
+    _response_map = map_response_t();
+}
 
 
 bool    Master::init()
@@ -29,7 +31,7 @@ bool    Master::init()
     _listener = socket(AF_INET, SOCK_STREAM, 0);
     if (_listener == -1)
     {
-        perror(addressString().c_str());
+        perror("socket");
         return false;
     }
 
@@ -39,15 +41,16 @@ bool    Master::init()
 
     if (bind(_listener, addr, sizeof(_address)) == -1)
     {
-        perror(addressString().c_str());
+        perror("bind");
         return false;
     }
 
     if (::listen(_listener, SOMAXCONN) == -1)
     {
-        perror(addressString().c_str());
+        perror("listen");
         return false;
     }
+
     // To be delete
     int option = 1;
     setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
@@ -61,55 +64,39 @@ bool    Master::init()
 }
 
 
-bool    Master::listen()
+void    Master::listen()
 {
-    std::vector<int>    del_fd;
+    v_int_t     del_v;
 
-    _listening = true;
     _M_add_poll(_listener, POLLIN);
 
-    std::cout << "Listening to http://" << this->addressString() << std::endl;
+    std::cout << "Listening to http://0.0.0.0:" << ntohs(_address.sin_port) << std::endl;
 
-    while (_listening || _poll_list.size() > 0)
+    while (_poll_v.size() > 0)
     {
         int poll_cnt = poll(_poll_list.data(), _poll_list.size(), TIMEOUT_POLL);
+
         if (poll_cnt < 0)
         {
-            perror(this->addressString().c_str());
-            return false;
+            perror("poll");
+
+            throw ft::ListenError();
         }
 
-        int new_socket = _M_listen(del_fd);
+        int new_socket = _M_listen(del_v);
 
-        _M_del_poll(del_fd);
-        del_fd.clear();
+        _M_del_poll(del_v);
+        del_v.clear();
 
         if (new_socket != -1)
         {
             _M_add_poll(new_socket);
         }
     }
-
-    return true;
 }
 
 
-std::string     Master::addressString() const
-{
-    int                 port;
-    std::string         host;
-    std::stringstream   ss;
-
-    host = inet_ntoa(_address.sin_addr);
-    port = ntohs(_address.sin_port);
-
-    ss << host << ":" << port;
-
-    return ss.str();
-}
-
-
-void    Master::_M_add_poll(int socket, short event)
+void    Master::_M_add_poll(const int socket, const short event)
 {
     struct pollfd   new_poll;
 
@@ -117,73 +104,68 @@ void    Master::_M_add_poll(int socket, short event)
     new_poll.events = event;
     new_poll.revents = 0;
 
-    _poll_list.push_back(new_poll);
+    _poll_v.push_back(new_poll);
 }
 
 
-void    Master::_M_del_poll(const std::vector<int>& del_fd)
+void    Master::_M_del_poll(const v_int_t& del_v)
 {
-    iterator_poll   start_it = _poll_list.begin();
-    for (std::vector<int>::const_iterator del_it = del_fd.begin(); del_it != del_fd.end(); ++del_it)
+    const_it_poll start_it = _poll_v.begin();
+
+    for (const_it_v_int del_it = del_v.begin(); del_it != del_v.end(); ++del_it)
     {
-        for (iterator_poll it = start_it; it != _poll_list.end(); ++it)
+        for (const_it_poll poll_it = start_it; poll_it != _poll_v.end(); ++poll_it)
         {
             if (it->fd == *del_it)
             {
-                start_it = _poll_list.erase(it);
+                start_it = _poll_v.erase(it);
                 std::cerr << "Close: " << *del_it << std::endl;
                 close(*del_it);
                 break;
             }
         }
 
-        _request_map.erase(*del_it);
+        _M_del_client(*del_it);
     }
 }
 
 
-int     Master::_M_listen(std::vector<int>& del_fd)
+int     Master::_M_listen(v_int_t& del_v)
 {
-    int     new_socket = -1;
     bool    alive;
+    int     new_socket = -1;
 
-    for (const_iterator_poll it = _poll_list.begin(); it != _poll_list.end(); ++it)
+    for (const_it_poll it = _poll_v.begin(); it != _poll_v.end(); ++it)
     {
-        if (it->revents & POLLHUP \
-            || it->revents & POLLERR \
-            || it->revents & POLLNVAL
-            )
+        int fd = it->fd;
+        const short revent = it->revents;
+
+        if (revent & POLLHUP || revent & POLLERR || revent & POLLNVAL)
         {
-            del_fd.push_back(it->fd);
+            del_v.push_back(fd);
             continue;
         }
-        else if (it->revents & POLLIN)
+        if (revent & POLLIN)
         {
-            if (it->fd == _listener)
+            if (fd == _listener)
             {
-                alive = _M_accept(new_socket);
-                if (!alive)
-                {
-                    del_fd.push_back(_listener);
-                    _listener = -1;
-                    _listening = false;
-                }
+                new_socket = _M_accept(new_socket);
             }
             else
             {
-                alive = _M_request(it->fd);
+                alive = _M_request(fd);
                 if (!alive)
                 {
-                    del_fd.push_back(it->fd);
+                    del_v.push_back(fd);
                 }
             }
         }
-        else if (it->revents & POLLOUT)
+        if (revent & POLLOUT)
         {
-            alive = _M_response(it->fd);
+            alive = _M_response(fd);
             if (!alive)
             {
-                del_fd.push_back(it->fd);
+                del_v.push_back(fd);
             }
         }
     }
@@ -192,8 +174,9 @@ int     Master::_M_listen(std::vector<int>& del_fd)
 }
 
 
-bool    Master::_M_accept(int& socket) const
+int     Master::_M_accept() const
 {
+    int         socket;
     sockaddr    addr_remote;
     socklen_t   addr_len = 0;
 
@@ -201,12 +184,7 @@ bool    Master::_M_accept(int& socket) const
 
     if (socket == -1)
     {
-        if (errno != EWOULDBLOCK)
-        {
-            perror(this->addressString().c_str());
-
-            return false;
-        }
+        perror("accept");
     }
     else
     {
@@ -216,13 +194,13 @@ bool    Master::_M_accept(int& socket) const
 #endif
     }
 
-    return true;
+    return socket;
 }
 
 
-bool    Master::_M_request(int socket)
+bool    Master::_M_request(const int socket)
 {
-    unsigned char   buffer[DEFAULT_BUFFER_SIZE];
+    char    buffer[DEFAULT_BUFFER_SIZE];
 
     ssize_t ret = ft::recv(socket, buffer, DEFAULT_BUFFER_SIZE);
     if (ret <= 0)
@@ -230,107 +208,95 @@ bool    Master::_M_request(int socket)
         return false;
     }
 
-    bytestring  byte_read(buffer, ret);
     try
     {
         Request& request = _request_map.at(socket);
-
-        request.appendRequest(byte_read);
+        request.appendRequest(buffer, ret);
     }
     catch (const std::out_of_range&)
     {
-        Request request(byte_read);
+        Request     request(buffer, ret);
 
-        _request_map.insert(std::make_pair(socket, request));
+        _M_add_client(socket, request);
     }
 
     return true;
 }
 
 
-bool    Master::_M_response(int socket)
+bool    Master::_M_response(const int socket)
 {
-    bool    alive;
-    
+    Response& response = _response_map.at(socket);
+
     try
     {
-        Request& request = _request_map.at(socket);
-        
-        if (!request.isRequestLine())
+        if (response.isReady())
         {
-            alive = _M_process(socket, request, PROCESS_REQUEST_LINE);
-        }
-        else if (!request.isHeaderEnd())
-        {
-            alive = _M_process(socket, request, PROCESS_HEADER);
-        }
-        else if (!request.isContentEnd())
-        {
-            alive = _M_process(socket, request, PROCESS_CONTENT);
+            return response.respond();
         }
         else
         {
-            // alive = _M_process(socket, request, PROCESS_REQUEST);
-            std::cout << BYTES_TO_STR(request.getRequest()->str().c_str()) << std::endl;
+            return _M_process(response);
         }
-
-        return alive;
-    }
-    catch (const std::out_of_range&)
-    {
-        return true;
-    }
-}
-
-
-bool    Master::_M_process(int socket, Request& request, int stage)
-{
-    try
-    {
-        switch (stage)
-        {
-            case PROCESS_REQUEST_LINE:
-                request.processRequestLine();
-                break;
-            
-            case PROCESS_HEADER:
-                request.processHeader();
-                if (request.isHeaderEnd())
-                {
-                    request.setConfig(
-                        _M_match_config(request.getServer())
-                    );
-                    request.postHeaderValidate();
-                }
-                break;
-            
-            case PROCESS_CONTENT:
-                request.processContent();
-                break;
-        }
-
-        return true;
     }
     catch (const ft::HttpException& e)
     {
-        bytestring  a;
-        e.send(socket, a);
+        if (e.getCode() != -1)
+        {
+            e.send(socket);
+        }
+
+        return false;
     }
-
-
-    return false;
 }
 
 
-const ServerConfig*   Master::_M_match_config(const std::string& server_name)
+bool    Master::_M_process(const Response& response)
 {
-    for (const_iterator_server it = _server_map.begin(); it != _server_map.end(); ++it)
+    if (!response.isServer())
     {
-        if (!server_name.compare(it->first))
+        try
         {
-            return &(it->second);
+            std::string host = response.preprocess();
+            response.setServer(_M_match_server(host));
+        }
+        catch (const ft::RequestNotReady& e)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        return response.process();
+    }
+}
+
+
+const ServerConfig* Master::_M_match_server(const std::string& host)
+{
+    for (const_it_server it = _server_v.begin(); it != _server_v.end(); ++it)
+    {
+        if (host.compare(it->getHost()) == 0)
+        {
+            return it;
         }
     }
 
-    return &(_server_map.begin()->second);
+    return _server_v.begin();
+}
+
+
+void    Master::_M_add_client(const int socket, const Request& request)
+{
+    Response response(request);
+
+    _request_map.insert(std::make_pair(socket, request));
+    _response_map.insert(std::make_pair(socket, response));
+}
+
+
+void    Master::_M_del_client(const int socket)
+{
+    _response_map.erase(socket);
+    _request_map.erase(socket);
 }

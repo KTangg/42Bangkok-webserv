@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 00:15:40 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:55:27 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 18:03:57 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,6 +199,36 @@ v_str_t     ft::parse_path(const std::string& path)
     }
 
     return v;
+}
+
+
+/**
+ * @brief Split str by ' ' and '/t' character
+ *
+ * @param str string to be split
+ * @return v_str_t vector of component get from split
+ */
+v_str_t     ft::parse_ws(const std::string& str)
+{
+    v_str_t             ret_v;
+    std::string         outer_each;
+    std::stringstream   outer_ss(str);
+
+    while (std::getline(outer_ss, outer_each, ' '))
+    {
+        std::string         inner_each;
+        std::stringstream   inner_ss(outer_each);
+
+        while (std::getline(inner_ss, inner_each, '\t'))
+        {
+            if (!inner_each.empty)
+            {
+                ret_v.push_back(inner_each);
+            }
+        }
+    }
+
+    return ret_v;
 }
 
 

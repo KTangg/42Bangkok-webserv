@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/07 17:05:57 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:43:06 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 17:33:52 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ namespace ft
         public:
             HttpException(
                 const http_status_t&    status,
-                const std::string&      server,
+                const std::string&      server = "",
                 const Header&           header = Header(),
                 const std::string&      content = ""
                 );

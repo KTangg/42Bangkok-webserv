@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 10:07:20 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 15:26:17 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,10 @@
 
 
 # include "webserv.hpp"
+
+# include "utils/HttpExceoption.hpp"
 # include "config/MasterConfig.hpp"
+# include "component/Response.hpp"
 # include "component/Request.hpp"
 
 
@@ -28,31 +31,36 @@ class Master
         virtual ~Master() { };
 
         bool            init();
-        bool            listen();
-
-        std::string     addressString() const;
+        void            listen();
 
     private:
+        Master();
+        Master(const Master& rhs);
+        Master& operator=(const Master& rhs);
+
         const sockaddr_in_t     _address;
-        const map_server_t      _server_map;
+        const v_server_t        _server_v;
 
-        int             _listener;
-        bool            _listening;
-        l_poll_t        _poll_list;
-        map_request_t   _request_map;
+        int                     _listener;
+        v_poll_t                _poll_v;
+        map_request_t           _request_map;
+        map_response_t          _response_map;
 
-        void            _M_add_poll(int socket, short event = DEFAULT_EVENT);
-        void            _M_del_poll(const std::vector<int> & delfd);
-        int             _M_listen(std::vector<int>& del_fd);
-        bool            _M_accept(int& socket) const;
+        int             _M_listen(v_int_t& del_fd);
 
-        bool            _M_request(int socket);
+        int             _M_accept() const;
+        bool            _M_request(const int socket);
+        bool            _M_response(const int socket);
 
-        bool            _M_response(int socket);
-        bool            _M_process(int socket, Request& request, int stage);
+        bool            _M_process(const Response& response);
 
-        void                    _M_validate_request(Request& request);
-        const ServerConfig*     _M_match_config(const std::string& server_name);
+        void            _M_add_client(const int socket, const Request& request);
+        void            _M_del_client(const int socket);
+
+        void            _M_del_poll(const v_int_t& delfd);
+        void            _M_add_poll(const int socket, const short event = POLLIN | POLLOUT);
+
+        const ServerConfig*     _M_match_server(const std::string& host);
 };
 
 

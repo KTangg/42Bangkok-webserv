@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 16:40:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 16:57:30 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 18:32:52 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,7 +116,7 @@ bool    MasterConfig::existHost(const std::string& host) const
     for (const_it_server it = _server_v.begin(); it != _server_v.end(); ++it)
     {
         std::string check_name = it->getName();
-        if (!check_name.compare(ft::tolower(host)))
+        if (check_name.compare(ft::tolower(host)) == 0)
         {
             return true;
         }

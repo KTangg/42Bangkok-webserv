@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/07 17:03:41 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:19:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 17:50:22 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ namespace ft
     bool            is_number(const std::string& s);
     std::string     skip_ws(const std::string& str);
     std::string     tolower(const std::string& str);
+    v_str_t         parse_ws(const std::string& str);
     std::string     capitalize(const std::string& str);
     ssize_t         hex_to_dec(const std::string& str);
     std::string     trim_path(const std::string& path);

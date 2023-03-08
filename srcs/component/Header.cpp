@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/07 18:04:15 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:45:13 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 17:34:15 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,7 @@ bool    Header::addHeader(const std::string& line)
 
         if (ret == false)
         {
-            throw ft::HttpException(HTTP_BAD_REQUEST, DEFAULT_SERVER_NAME);
+            throw ft::HttpException(HTTP_BAD_REQUEST);
         }
         return ret;
     }

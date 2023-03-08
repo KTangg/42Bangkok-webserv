@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/18 20:10:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:24:56 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 11:22:29 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # include <cstring>
 # include <cstdlib>
 # include <iostream>
+# include <fstream>
 # include <sstream>
 # include <string>
 
@@ -47,6 +48,9 @@ typedef struct sockaddr_in                              sockaddr_in_t;
 typedef std::vector<std::string>                        v_str_t;
 typedef v_str_t::iterator                               it_v_str;
 typedef v_str_t::const_iterator                         const_it_v_str;
+typedef std::vector<int>                                v_int_t;
+typedef v_int_t::iterator                               it_v_int;
+typedef v_int_t::const_iterator                         const_it_v_int;
 typedef std::vector<struct pollfd>                      v_poll_t;
 typedef v_poll_t::iterator                              it_poll;
 typedef v_poll_t::const_iterator                        const_it_poll;
@@ -103,6 +107,13 @@ typedef std::pair<int, const std::string>               http_status_t;
 # define CONNECTION_CLOSE           "close"
 # define CONNECTION_ALIVE           "keep-alive"
 # define TEXT_HTML                  "text/html"
+
+
+namespace ft
+{
+    class ListenError : public std::exception { };
+    class RequestNotReady : public std::exception { };
+}
 
 
 #endif /* __WEBSERV_HPP__ */
