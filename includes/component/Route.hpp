@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:04:38 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/07 20:31:34 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,45 +16,59 @@
 
 
 # include "webserv.hpp"
+# include "utils/utils.hpp"
 
-# include "component/Cgi.hpp"
+
+typedef std::map<std::string, std::string>      map_cgi_t;
+typedef map_cgi_t::iterator                     it_cgi;
+typedef map_cgi_t::const_iterator               const_it_cgi;
 
 
 class Route
 {
     public:
         Route(
-            const std::string&      route_path,
-            const std::string&      root_path,
-            const l_str_t&          allow_method = l_str_t(1, "GET"),
-            const std::string&      redirect = "",
+            const std::string&      route,
+            const std::string&      root,
+            const v_str_t&          allow = v_str_t(1, "GET"),
+            const bool&             redirect = false,
+            const std::string&      redirect_path = "",
             const bool&             listing = false,
-            const std::string&      file = "index.html",
+            const std::string&      index = "index.html",
             const map_cgi_t&        cgi_map = map_cgi_t()
         );
+        Route(const Route& rhs);
+        Route& operator=(const Route& rhs);
 
         virtual ~Route();
 
-        bool            isRedirect() const;
+        std::string     getRoot() const;
+        v_str_t         getAllow() const;
+        std::string     getIndex() const;
         bool            isListing() const;
-        std::string     getFile() const;
-        std::string     findPath(const std::string& path) const;
-        bool            checkMethod(const std::string& method) const;
+        bool            isRedirect() const;
+        std::string     getRedirectPath() const;
+        std::string     getCgi(const std::string& ext) const;
+        bool            isAllow(const std::string& method) const;
+        bool            matchRoute(const std::string& path) const;
 
     private:
-        l_str_t         _l_route_path;
-        std::string     _root_path;
-        l_str_t         _allow_method;
-        std::string     _redirect;
+        Route();
+
+        v_str_t         _route;
+        std::string     _root;
+        v_str_t         _allow;
+        bool            _redirect;
+        std::string     _redirect_path;
         bool            _listing;
-        std::string     _file;
+        std::string     _index;
         map_cgi_t       _cgi_map;
 };
 
 
 typedef std::map<std::string, Route, std::greater<std::string> >    map_route_t;
-typedef map_route_t::iterator                                       iterator_route;
-typedef map_route_t::const_iterator                                 const_iterator_route;
+typedef map_route_t::iterator                                       it_route;
+typedef map_route_t::const_iterator                                 const_it_route;
 
 
 #endif

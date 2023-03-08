@@ -6,48 +6,107 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 16:08:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:01:04 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/07 20:44:30 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #include "component/Route.hpp"
 
+
 Route::Route(
-    const std::string&      route_path,
-    const std::string&      root_path,
-    const l_str_t&          allow_method,
-    const std::string&      redirect,
+    const std::string&      route,
+    const std::string&      root,
+    const v_str_t&          allow,
+    const bool&             redirect,
+    const std::string&      redirect_path,
     const bool&             listing,
-    const std::string&      file,
+    const std::string&      index,
     const map_cgi_t&        cgi_map
     )
-: _l_route_path(),
-  _root_path(root_path),
-  _allow_method(allow_method),
-  _redirect(redirect),
-  _listing(listing),
-  _file(file),
-  _cgi_map(cgi_map)
-{ 
-    _l_route_path = ft::parse_path_directory(route_path);
-    if (_root_path.size() > 1)
-    {
-        size_t  last_index = _root_path.size() - 1;
-        if (_root_path[last_index] == '/')
-        {
-            _root_path.erase(last_index);
-        }
-    }
-}
-
-
-Route::~Route() {}
-
-
-bool    Route::isRedirect() const
 {
-    return !_redirect.empty();
+    _route = ft::parse_path(route);
+    _root = ft::trim_path(root);
+    _allow = allow;
+    _redirect = redirect;
+    _redirect_path = redirect_path;
+    _listing = listing;
+    _index = index;
+    _cgi_map = cgi_map;
 }
+
+
+/**
+ * @brief Construct a new Route:: Route object
+ *
+ * @param rhs
+ */
+Route::Route(const Route& rhs)
+{
+    *this = rhs;
+}
+
+
+/**
+ * @brief
+ *
+ * @param rhs
+ * @return Route&
+ */
+Route& Route::operator=(const Route& rhs)
+{
+    _route = rhs._route;
+    _root = rhs._root;
+    _allow = rhs._allow;
+    _redirect = rhs._redirect;
+    _redirect_path = rhs._redirect_path;
+    _listing = rhs._listing;
+    _index = rhs._index;
+    _cgi_map = rhs._cgi_map;
+
+    return *this;
+}
+
+
+/**
+ * @brief Destroy the Route:: Route object
+ *
+ */
+Route::~Route() { }
+
+
+/**
+ * @brief
+ *
+ * @return std::string
+ */
+std::string Route::getRoot() const
+{
+    return _root;
+}
+
+
+/**
+ * @brief
+ *
+ * @return v_str_t
+ */
+v_str_t     Route::getAllow() const
+{
+    return _allow;
+}
+
+
+/**
+ * @brief
+ *
+ * @return std::string
+ */
+std::string Route::getIndex() const
+{
+    return _index;
+}
+
 
 
 bool    Route::isListing() const
@@ -56,40 +115,72 @@ bool    Route::isListing() const
 }
 
 
-std::string     Route::getFile() const
+
+bool    Route::isRedirect() const
 {
-    return _file;
+    return _redirect;
 }
 
 
-std::string     Route::findPath(const std::string& path) const
+
+std::string Route::getRedirectPath() const
 {
-    l_str_t l_path = ft::parse_path_directory(path);
-    l_str_t::const_iterator it_path = l_path.begin();
-
-    for (l_str_t::const_iterator it = _l_route_path.begin(); it != _l_route_path.end(); ++it)
-    {
-        if (it_path == l_path.end() || it_path->compare(*it))
-        {
-            throw std::invalid_argument("");
-        }
-    }
-
-    std::string add_path = ft::path_join(it_path, l_path.end());
-
-    return _root_path + add_path;
+    return _redirect_path;
 }
 
 
-bool    Route::checkMethod(const std::string& method) const
+
+/**
+ * @brief Get the CGI path
+ *
+ * @param ext file extension ex. ".py", ".php"
+ * @return std::string CGI path
+ * @exception std::out_of_range is throw when extension not found
+ */
+std::string Route::getCgi(const std::string& ext) const
 {
-    for (l_str_t::const_iterator it = _allow_method.begin(); it != _allow_method.end(); ++it)
+    return _cgi_map.at(ext);
+}
+
+
+/**
+ * @brief Check if method is allow on the route
+ *
+ * @param method method to check ex. GET POST
+ * @return true if allow, otherwise false
+ */
+bool    Route::isAllow(const std::string& method) const
+{
+    for (const_it_v_str it = _allow.begin(); it != _allow.end(); ++it)
     {
-        if (!method.compare(*it))
+        if (it->compare(method) == 0)
         {
             return true;
         }
     }
 
     return false;
+}
+
+
+/**
+ * @brief Matching URL with route path
+ *
+ * @param path url path
+ * @return true if path is on this route, otherwise false is returned
+ */
+bool    Route::matchRoute(const std::string& path) const
+{
+    v_str_t     path_v = ft::parse_path(path);
+
+    const_it_v_str  it_path = path_v.begin();
+    for (const_it_v_str it = _route.begin(); it != _route.end(); ++it, ++it_path)
+    {
+        if (it_path == path_v.end() || it->compare(*it_path) != 0)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }

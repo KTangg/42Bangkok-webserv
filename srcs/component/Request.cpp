@@ -6,30 +6,33 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/25 23:43:36 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/06 17:07:01 by spoolpra         ###   ########.fr       */
+/*   Updated: 2023/03/08 19:11:27 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "component/Request.hpp"
+#include "utils/HttpExceoption.hpp"
 
 
-Request::Request(const bytestring& bstr)
-: _request(),
-  _method(),
-  _path(),
-  _server(),
-  _config(),
-  _route(),
-  _header(),
-  _header_end(),
-  _header_size(),
-  _latest_header(),
-  _chunk(),
-  _content(),
-  _content_end()
-{ 
-    _request = new bytestream(bstr);
+/**
+ * @brief Construct a new Request:: Request object
+ *
+ * @param buffer raw request
+ * @param n buffer size
+ */
+Request::Request(const char* buffer, const size_t n) : _request()
+{
+    _M_append_request(buffer, n);
+    _request.seekg(0, std::ios_base::beg);
+    _header = Header();
+    _method = std::string();
+    _path = std::string();
+    _content = std::string();
+    _header_size = 0;
+    _header_end = false;
+    _chunk = false;
+    _complete = false;
 }
 
 
@@ -39,665 +42,302 @@ Request::Request(const Request& rhs)
 }
 
 
-Request&    Request::operator=(const Request& rhs)
+Request& Request::operator=(const Request& rhs)
 {
-    _request = new bytestream(rhs._request->str());
+    _request.str("");
+    _request << rhs._request.str();
+    _request.seekg(0, std::ios_base::beg);
+    _header = rhs._header;
     _method = rhs._method;
     _path = rhs._path;
-    _server = rhs._server;
-    _config = rhs._config;
-    _route = rhs._route;
-    _header = rhs._header;
-    _header_end = rhs._header_end;
-    _header_size = rhs._header_size;
-    _latest_header = rhs._latest_header;
-    _chunk = rhs._chunk;
     _content = rhs._content;
-    _content_end = rhs._content_end;
+    _header_size = rhs._header_size;
+    _header_end = rhs._header_end;
+    _chunk = rhs._chunk;
+    _complete = rhs._complete;
 
     return *this;
 }
 
 
-Request::~Request() 
+/**
+ * @brief Destroy the Request:: Request object
+ *
+ */
+Request::~Request() { }
+
+
+/**
+ * @brief Get method
+ *
+ * @return std::string method
+ */
+std::string Request::getMethod() const
 {
-    _request->str((unsigned char*)"");
-    delete _request;
+    return _method;
 }
 
 
-bytestream*  Request::getRequest() const
+/**
+ * @brief Get URL path
+ *
+ * @return std::string
+ */
+std::string Request::getPath() const
 {
-    return _request;
+    return _path;
 }
 
 
-void    Request::appendRequest(const bytestring& new_byte)
+/**
+ * @brief Get header value according to key
+ *
+ * @param key Header key to search
+ * @return std::string value according to key
+ * @exception std::out_of_range if key not found
+ */
+std::string Request::getHeader(const std::string& key) const
 {
-    _request->clear();
-    _request->seekp(0, std::ios::end);
-    _request->write(new_byte.c_str(), new_byte.size());
+    return _header.getHeader(key);
 }
 
 
-void    Request::setConfig(const ServerConfig* config)
+/**
+ * @brief Check wheter request is finish reading
+ *
+ * @return true all data is read, otherwise false
+ */
+bool    Request::isComplete() const
 {
-    _config = config;
+    return _complete;
 }
 
 
-std::string Request::getServer() const
-{
-    return _server;
-}
-
-
-bool    Request::isRequestLine() const
-{
-    return !(_method.empty() || _path.empty());
-}
-
-
-void    Request::processRequestLine()
-{
-    bytestring      line;
-    std::string     line_str;
-    bytepos         before_pos;
-    bytepos         new_pos;
-
-    while (true)
-    {
-        before_pos = _request->tellg();
-        std::getline(*_request, line, CHAR_TO_BYYE('\n'));
-
-        line_str = BYTES_TO_STR(line.c_str());
-        if (!line_str.compare("\r") || line_str.empty())
-        {
-            if (_request->eof())
-            {
-                _request->clear();
-                _request->seekg(before_pos);
-                return ;
-            }
-            continue;
-        }
-        else
-        {
-            break;
-        }
-    }
-    if (!std::isupper(line_str[0]))
-    {
-        std::cerr << "Request Line not start with upper" << std::endl;
-        throw ft::HttpException(HTTP_BAD_REQUEST);
-    }
-    l_str_t l_content = ft::split(line, CHAR_TO_BYYE(' '), CHAR_TO_BYYE('\t'));
-    
-    if (_request->eof())
-    {
-        _S_validate_request_line(l_content);
-        _request->clear();
-        _request->seekg(before_pos);
-    }
-    else
-    {
-        if (!_S_validate_request_line(l_content))
-        {
-            std::cerr << "Incomplete Request status" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        _method = l_content[0];
-        _path = l_content[1];
-    }
-}
-
-
+/**
+ * @brief Check wheter all header is already parsed or not
+ *
+ * @return true on 2 x CRLF seperate Header with content found, else none
+ */
 bool    Request::isHeaderEnd() const
 {
     return _header_end;
 }
 
 
-void    Request::processHeader()
+/**
+ * @brief Append buffer to request
+ *
+ * @param buffer bytes buffer
+ * @param n size of buffer
+ */
+void    Request::appendRequest(const char* buffer, size_t n)
 {
-    bytestring      line;
-    bytepos         before_pos;
-    
+    _M_append_request(buffer, n);
+}
+
+
+/**
+ * @brief Find first line of request line and parse path/method found
+ *
+ * @exception ft::HttpException in case of invalid request
+ * @exception ft::RequestNotReady if request not ready to process yet
+ */
+void    Request::parseRequestLine()
+{
+    std::string line;
+
     while (true)
     {
-        before_pos = _request->tellg();
-        std::getline(*_request, line, CHAR_TO_BYYE('\n'));
-        std::string line_str = BYTES_TO_STR(line.c_str());
-    
-        if (_request->eof())
+        line = _M_read_line(true);
+
+        std::string trim = ft::skip_ws(line);
+        if (!trim.empty())
         {
-            _request->clear();
-            _request->seekg(before_pos);
-            _M_process_header(line_str, false);
             break;
         }
-        else if (!line_str.compare("\r") || line_str.empty())
-        {
-            _M_get_mandatory_header();
-            _header_end = true;
-            break;
-        }
-        else
-        {
-            _M_process_header(line_str, true);
-        }
     }
+
+    _M_parse_request_line(line);
 }
 
 
-bool    Request::isContentEnd() const
+/**
+ * @brief Append read buffer to request stream
+ *
+ * @param buffer content buffer
+ * @param n size to be read from buffer
+ */
+void    Request::_M_append_request(const char* buffer, size_t n)
 {
-    return _content_end;
+    _request.seekp(0, std::ios_base::end);
+    _request.write(buffer, n);
 }
 
 
-void    Request::processContent()
+/**
+ * @brief Read line that end with \\n and trim out trailing \\r
+ * in case of any error rewind _request read pos back
+ *
+ * @param wait wait for more request or not
+ * @return std::string retrun clean line with out \\r\\n ending
+ * @exception ft::RequestNotReady will be throw if eof is not accept and file reach eof
+ */
+std::string     Request::_M_read_line(bool wait)
 {
-    if (_chunk)
+    std::string line;
+
+    std::stringstream::pos_type before_pos = _request.tellg();
+
+    std::getline(_request, line, '\n');
+
+    if (_request.eof() && wait)
     {
-        _content_end = _M_process_chunk_content();
+        _request.clear();
+        _request.seekg(before_pos);
+
+        throw ft::RequestNotReady();
     }
-    else
+
+    if (!line.empty() && line[line.size() - 1] == '\r')
     {
-        _content_end = _M_process_content();
+        line.erase(line.size() - 1);
     }
+
+    return line;
 }
 
 
-void    Request::postHeaderValidate()
+/**
+ * @brief Validate request line and save value to object
+ *
+ * @param line request line without \\r\\n trailing
+ * @exception ft::HttpException is thrown if request line isn't compatible
+ */
+void    Request::_M_parse_request_line(const std::string& line)
 {
-    try
+    if (!std::isupper(line[0]))
     {
-        std::string value = _header.at(HEADER_CONTENT_LENGTH);
-        if (!ft::is_number(value))
-        {
-            std::cerr << "Invalid Content-Length header" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        if (!_chunk)
-        {
-            size_t  length = std::atol(value.c_str());
-            if (length > _config->getLimit())
-            {
-                throw ft::HttpException(HTTP_TOO_LARGE);
-            }
-        }
-    }
-    catch (const std::out_of_range&)
-    { }
-    
-    _route = _config->searchRoute(_path);
-    if (_route == NULL)
-    {
-        throw ft::HttpException(HTTP_NOT_FOUND);
-    }
-    else if (!_route->checkMethod(_method))
-    {
-        throw ft::HttpException(HTTP_NOT_ALLOW);
-    }
-}
-
-
-void    Request::_M_process_header(const std::string& str, bool insert)
-{
-    size_t  str_size = str.size();
-    if (_header_size + str_size > DEFAULT_HTTP_LIMIT)
-    {
-        std::cerr << "Too Large header" << std::endl;
         throw ft::HttpException(HTTP_BAD_REQUEST);
     }
+    v_str_t content_v = ft::parse_ws(line);
 
-    if (str[0] == ' ' || str[0] == '\t')
+    int i = 0;
+    for (const_it_v_str it = content_v.begin(); it != content_v.end(); ++it, ++i)
     {
-        std::string     value = ft::skip_ws(str);
-        if (!_latest_header.empty())
+        switch (i)
         {
-            if (insert)
-            {
-                _header_size = _header_size + str_size;
-                try
-                {
-                    std::string& prev_val = _header.at(_latest_header);
-                    prev_val = prev_val + " " + value;
-                }
-                catch (const std::out_of_range&)
-                { }
-            }
-        }
-    }
-    else
-    {
-        bool    success;
-        std::pair<std::string, std::string>     item;
-
-        success = Request::_S_parse_header(item, str);
-        if (!success)
-        {
-            _latest_header = "";
-            _header_size = _header_size + str_size;
-        }
-        else if (insert)
-        {
-            _latest_header = item.first;
-            _header_size = _header_size + str_size;
-            try
-            {
-                _header.at(item.first);
-                std::cerr << "Duplicate header" << std::endl;
+            case METHOD_INDEX:
+                _method = _S_validate_method(*it);
+                break;
+            case PATH_INDEX:
+                _path = _S_validate_path(*it);
+                break;
+            case HTTP_VERSION_INDEX:
+                _S_validate_http(*it);
+                break;
+            default:
                 throw ft::HttpException(HTTP_BAD_REQUEST);
-            }
-            catch (const std::out_of_range&)
-            {
-                _header.insert(item);
-            }
-        }
-    }
-}
-
-
-bool    Request::_S_validate_request_line(const l_str_t& l_content)
-{
-    int     i = 0;
-    bool    complete = false;
-
-    for (l_str_t::const_iterator it = l_content.begin(); it != l_content.end(); ++it, ++i)
-    {
-        if (i == 0)
-        {
-            _S_validate_method(*it);
-        }
-        else if (i == 1)
-        {
-            _S_validate_path(*it);
-        }
-        else if (i == 2)
-        {
-            complete = _S_validate_version(*it);
-        }
-        else
-        {
-            std::cerr << "Too Many Request component" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
+                break;
         }
     }
 
-    return complete;
-}
-
-
-void    Request::_M_get_mandatory_header()
-{
-    try
+    if (i < 3)
     {
-        _server = _header.at(HEADER_HOST);
-    }
-    catch (const std::out_of_range&)
-    {
-        std::cerr << "Host Header not found" << std::endl;
         throw ft::HttpException(HTTP_BAD_REQUEST);
     }
-    try
-    {
-        std::string value = _header.at(HEADER_TRANSFER_ENCODE);
-        _chunk = _S_check_transfer_encode(value);
-    }
-    catch (const std::out_of_range&)
-    { }
 }
 
 
-bool    Request::_M_process_chunk_content()
+/**
+ * @brief Validate method, method should be all uppercase
+ * this not checking is the method is allow or not
+ *
+ * @param method string to be check
+ * @return std::string the same given string
+ * @exception ft::HttpException will be thrown when method is invalid
+ */
+std::string Request::_S_validate_method(const std::string& method)
 {
-    ssize_t         read_cnt;
-    bytepos         before_pos;
-    bytestring      line;
-    unsigned char   sep = '\n';
-
-    while (true)
-    {
-        before_pos = _request->tellg();
-        std::getline(*_request, line, sep);
-        if (_request->eof())
-        {
-            _request->clear();
-            _request->seekg(before_pos);
-            return false;
-        }
-        read_cnt = ft::hex_to_dec(BYTES_TO_STR(line.c_str()));
-
-        if (read_cnt < 0)
-        {
-            std::cerr << "chunk size less than 0" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        else if (read_cnt == 0)
-        {
-            return true;
-        }
-        try
-        {
-            unsigned char* buffer = _M_read_content(read_cnt, true);
-            if (buffer == NULL)
-            {
-                return true;
-            }
-            
-            std::getline(*_request, line, sep);
-            if (_request->eof())
-            {
-                throw std::out_of_range("");
-            }
-            
-            _M_append_content(buffer, read_cnt);
-        }
-        catch (const std::out_of_range&)
-        {
-            _request->clear();
-            _request->seekg(before_pos);
-            return false;
-        }
-    }
-}
-
-
-bool    Request::_M_process_content()
-{
-    ssize_t         len;
-    unsigned char*  buffer;
-    
-    try
-    {
-        std::string val = _header.at(HEADER_CONTENT_LENGTH);
-        ssize_t     len = std::atol(val.c_str());
-        bytepos     before_pos;
-        
-        try
-        {
-            buffer = _M_read_content(len, true);
-            if (buffer != NULL)
-            {
-                _M_append_content(buffer, len);
-            }
-        }
-        catch (const std::out_of_range&)
-        {
-            _request->clear();
-            _request->seekg(before_pos);
-
-            return false;
-        }
-    }
-    catch (const std::out_of_range&)
-    {
-        bytepos before;
-        bytepos end;
-
-        before = _request->tellg();
-        _request->seekg(0, std::ios::end);
-        end = _request->tellg();
-
-        len = end - before;
-        if (len > static_cast<ssize_t>(_config->getLimit()))
-        {
-            throw ft::HttpException(HTTP_TOO_LARGE);
-        }
-        
-        buffer = _M_read_content(len, false);
-        if (buffer != NULL)
-        {
-            _M_append_content(buffer, len);
-        }
-    }
-
-    return true;
-}
-
-
-unsigned char*  Request::_M_read_content(size_t read_size, bool strict)
-{
-    unsigned char*  buffer;
-
-    if (read_size == 0)
-    {
-        return NULL;
-    }
-    try
-    {
-        buffer = new unsigned char[read_size];
-    }
-    catch(const std::bad_alloc&)
-    {
-        throw ft::HttpException(HTTP_SERVER_ERROR);
-    }
-    
-    _request->read(buffer, read_size);
-
-    switch (strict)
-    {
-        case true:
-            if (static_cast<size_t>(_request->gcount()) != read_size)
-            {
-                delete buffer;
-                throw std::out_of_range("");
-            }
-            break;
-        
-        case false:
-            break;
-
-    }
-
-    return buffer;
-}
-
-
-void    Request::_M_append_content(unsigned char* buffer, ssize_t len)
-{
-    _content = _content + bytestring(buffer, len);
-    delete buffer;
-}
-
-
-void    Request::_S_validate_method(const std::string& str)
-{
-    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+    for (std::string::const_iterator it = method.begin(); it != method.end(); ++it)
     {
         if (!std::isupper(*it))
         {
-            std::cerr << "Lowercase method" << std::endl;
             throw ft::HttpException(HTTP_BAD_REQUEST);
         }
     }
+
+    return method;
 }
 
 
-void    Request::_S_validate_path(const std::string& str)
+/**
+ * @brief Validate path, path should be start with '/'
+ * path should not longer than limit value (default 8 kb)
+ *
+ * @param path URL path string
+ * @return std::string the same given string
+ * @exception ft::HttpException will be thrown if path is invalid
+ */
+std::string Request::_S_validate_path(const std::string& path)
 {
-    if (str[0] != '/')
+    if (path[0] != '/')
     {
-        std::cerr << "Path not start with /" << std::endl;
         throw ft::HttpException(HTTP_BAD_REQUEST);
     }
-    else if (str.size() > DEFAULT_HTTP_LIMIT)
+
+    if (path.size() > DEFAULT_HTTP_LIMIT)
     {
-        std::cerr << "URI too long" << std::endl;
         throw ft::HttpException(HTTP_LONG_URI);
     }
+
+    return path;
 }
 
 
-bool    Request::_S_validate_version(const std::string& str)
+/**
+ * @brief Check if HTTP version is match to support verion
+ *
+ * @param http_version HTTP/VERSION format string to be checked
+ * @exception ft::HttpException will be thrown if version is not supported
+ */
+void    Request::_S_validate_http(const std::string& http_version)
 {
-    std::string     prefix = HTTP_SLASH;
-    size_t          str_size = str.size();
-    size_t          prefix_size = prefix.size();
+    std::string prefix(HTTP);
 
-    if (str_size <= prefix_size)
+    size_t  prefix_size = prefix.size();
+
+    if (http_version.size() <= prefix_size)
     {
-        if (str.compare(0, str_size, prefix.c_str(), str_size))
-        {
-            std::cerr << "HTTP version not start with HTTP/" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-
-        return false;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
     }
-    else
+    else if (prefix.compare(0, prefix_size, http_version.c_str(), prefix_size) != 0)
     {
-        if (str.compare(0, prefix_size, prefix.c_str(), prefix_size))
-        {
-            std::cerr << "HTTP version not start with HTTP/" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        
-        std::string v_str = str.substr(prefix.size());
-        if (!std::isdigit(v_str[0]) || v_str[0] == '0')
-        {
-            std::cerr << "HTTP version 0" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        double v = std::atof(v_str.c_str());
-
-        if (v < 1)
-        {
-            std::cerr << "HTTP version 0" << std::endl;
-            throw ft::HttpException(HTTP_BAD_REQUEST);
-        }
-        else if (v > 1.1)
-        {
-            std::cerr << "Not support version" << std::endl;
-            throw ft::HttpException(HTTP_UNSUPPORT_VERSION);
-        }
-        int i = 0;
-        for (std::string::const_iterator it = v_str.begin(); it != v_str.end(); ++it, ++i)
-        {
-            char    c = *it;
-            int     is_digit = std::isdigit(c);
-
-            if (i == 1)
-            {
-                if (c != '.')
-                {
-                    std::cerr << "HTTP version . " << std::endl;
-                    throw ft::HttpException(HTTP_BAD_REQUEST);
-                }
-            }
-            else
-            {
-                if (!is_digit)
-                {
-                    if (c == '\r' && (it + 1) == v_str.end())
-                    {
-                        continue;
-                    }
-                    std::cerr << "HTTP version is not digit" << std::endl;
-                    throw ft::HttpException(HTTP_BAD_REQUEST);
-                }
-                else if (i > 4)
-                {
-                    std::cerr << "HTTP version too long" << std::endl;
-                    throw ft::HttpException(HTTP_BAD_REQUEST);
-                }
-            }
-        }
-
-        if (i < 3)
-        {
-            return false;
-        }
-        return true;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
     }
-}
-
-
-bool    Request::_S_parse_header(std::pair<std::string, std::string>& item, const std::string& str)
-{
-    size_t  sep_pos;
-
-    sep_pos = str.find(':');
-    
-    if (sep_pos == std::string::npos || sep_pos == 0)
+    else if (http_version[prefix_size] != '/')
     {
-        return false;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
     }
-    
-    item.first = ft::tolower(str.substr(0, sep_pos));
+
     try
     {
-        std::string buffer = str.substr(sep_pos + 1);
+        std::string version = http_version.substr(prefix_size + 1);
 
-        buffer = ft::skip_ws(buffer);
-        if (buffer[buffer.size() - 1] == '\r')
-        {
-            buffer = buffer.erase(buffer.size() - 1);
-        }
-
-        item.second = buffer;
-
-        return true;
+        _S_validate_version_number(version)
     }
     catch (const std::out_of_range&)
     {
-        return false;
+        throw ft::HttpException(HTTP_BAD_REQUEST);
     }
 }
 
 
-bool    Request::_S_check_transfer_encode(const std::string& value)
+/**
+ * @brief
+ *
+ * @param version
+ */
+void    Request::_S_validate_version_number(const std::string& version)
 {
-    if (!value.compare(CHUNK_ENCODE))
-    {
-        return true;
-    }
-
-    char    c;
-    size_t  pos = value.find(CHUNK_ENCODE, 0);
-    size_t  len = std::strlen(CHUNK_ENCODE);
-
-    if (pos == std::string::npos)
-    {
-        return false;
-    }
-    else if (pos == 0)
-    {
-        try
-        {
-            c = value.at(pos + len);
-            if (c != ',')
-            {
-                return false;
-            }
-        }
-        catch (const std::out_of_range&)
-        {
-            return true;
-        }
-    }
-    else
-    {
-        try
-        {
-            c = value.at(pos - 1);
-            if (c != ' ' && c != ',')
-            {
-                return false;
-            }
-            c = value.at(pos + len);
-            if (c != ',')
-            {
-                return false;
-            }
-        }
-        catch (const std::out_of_range&)
-        {
-            return true;
-        }
-    }
-
-    return true;
+    // TODO
 }

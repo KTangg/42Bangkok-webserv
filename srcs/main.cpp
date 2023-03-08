@@ -29,15 +29,23 @@ int main(int argc, char* argv[])
     std::string route_path_2 = "v2";
     std::string root_path_2 = "/var/www/html2/";
 
+    std::string route_path_3 = "/v1/test";
+    std::string root_path_3 = "/var/www/test/";
+
     Route   route_1 = Route(route_path_1, root_path_1);
 
     Route   route_2 = Route(route_path_2, root_path_2);
+
+    Route   route_3 = Route(route_path_3, root_path_3);
 
     route_map.insert(
         std::make_pair(route_path_1, route_1)
     );
     route_map.insert(
         std::make_pair(route_path_2, route_2)
+    );
+    route_map.insert(
+        std::make_pair(route_path_3, route_3)
     );
 
     MasterConfig    m_config = MasterConfig("0.0.0.0", port);
