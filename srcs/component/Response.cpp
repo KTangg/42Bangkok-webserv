@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/08 14:13:17 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/08 17:00:14 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ void    Response::setServer(const ServerConfig* server)
  */
 std::string     Response::preprocess() const
 {
-    if (_request.getPath().empty())
+    if (_request.get_path().empty())
     {
         _request.parseRequestLine();
     }
@@ -105,7 +105,7 @@ std::string     Response::preprocess() const
        _request.parseHeaderLine();
     }
 
-    return _request.getHost();
+    return _request.get_host();
 }
 
 

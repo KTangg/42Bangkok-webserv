@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/25 23:43:36 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/08 19:11:27 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,7 @@ std::string Request::getMethod() const
  *
  * @return std::string
  */
-std::string Request::getPath() const
+std::string Request::get_path() const
 {
     return _path;
 }
