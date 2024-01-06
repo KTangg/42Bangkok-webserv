@@ -1,33 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cgi.hpp                                            :+:      :+:    :+:   */
+/*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/03 20:20:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
+/*   Created: 2024/01/04 18:31:18 by spoolpra          #+#    #+#             */
+/*   Updated: 2024/01/06 14:54:18 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __CGI_HPP__
-#define __CGI_HPP__
+#ifndef __UTILS_HPP__
+#define __UTILS_HPP__
 
-#include <string>
+#include <sstream>
 
-class Cgi {
-   public:
-    Cgi(const std::string& path, const std::string& extension);
-    ~Cgi();
+namespace ft {
+    template <typename T>
+    std::string to_string(T value) {
+        std::ostringstream os;
+        os << value;
 
-    const std::string& get_path() const;
-    const std::string& getExtension() const;
+        return os.str();
+    }
+}  // namespace ft
 
-    // TODO: Add execute method.
-
-   private:
-    const std::string _path;
-    const std::string _extension;
-};
-
-#endif /* __CGI_HPP__ */
+#endif /* __UTILS_HPP__ */

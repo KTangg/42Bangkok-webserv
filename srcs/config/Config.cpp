@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 16:44:16 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 21:44:06 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/04 21:44:20 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ Config::~Config() {
  *
  * @return const int& The port number.
  */
-const int& Config::getPort() const {
+const int& Config::get_port() const {
     return _port;
 }
 
@@ -40,7 +40,7 @@ const int& Config::getPort() const {
  *
  * @return const std::string& The host.
  */
-const std::string& Config::getHost() const {
+const std::string& Config::get_host() const {
     return _host;
 }
 

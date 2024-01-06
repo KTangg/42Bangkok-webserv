@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 16:08:46 by spoolpra          #+#    #+#             */
-/*   Updated: 2023/03/07 20:44:30 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:14:12 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,7 @@ bool    Route::isRedirect() const
 
 
 
-std::string Route::getRedirectPath() const
+std::string Route::get_redirect_path() const
 {
     return _redirect_path;
 }
@@ -137,7 +137,7 @@ std::string Route::getRedirectPath() const
  * @return std::string CGI path
  * @exception std::out_of_range is throw when extension not found
  */
-std::string Route::getCgi(const std::string& ext) const
+std::string Route::get_cgi(const std::string& ext) const
 {
     return _cgi_map.at(ext);
 }

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 23:34:41 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 13:51:30 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
  * @param configFilePath the path to the config file
  */
 Master::Master(const std::string& configFilePath) {
-    this->_isRunning = false;
+    this->_is_running = false;
     this->_configFilePath = configFilePath;
 
     // Handler sigint to gracfelly exit
@@ -54,7 +54,7 @@ void Master::init() {
 void Master::run() {
     _M_runWorker();
 
-    while (_isRunning) {
+    while (_is_running) {
         sleep(1);
     }
 
@@ -76,14 +76,14 @@ void Master::_M_loadConfig() {
 }
 
 /**
- * @brief Run each worker in a thread, change _isRunning to true
+ * @brief Run each worker in a thread, change _is_running to true
  *
  */
 void Master::_M_runWorker() {
-    this->_isRunning = true;
+    this->_is_running = true;
 
     for (std::vector<Worker*>::iterator it = _workers.begin(); it != _workers.end(); ++it) {
-        if (_isRunning == false) {
+        if (_is_running == false) {
             break;
         }
         std::thread workerThread(&Worker::run, *it);
@@ -109,7 +109,7 @@ void Master::_M_waitForWorker() {
  * @param signum the signal number
  */
 void Master::_M_signalHandler(int signum) {
-    if (signal == SIGINT) {
-        _isRunning = false;
+    if (signum == SIGINT) {
+        _is_running = false;
     }
 }

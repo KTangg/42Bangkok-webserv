@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 21:44:39 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ Cgi::~Cgi() {
  *
  * @return const std::string& The path to the CGI executable.
  */
-const std::string& Cgi::getPath() const {
+const std::string& Cgi::get_path() const {
     return _path;
 }
 

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 23:21:17 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/04 21:45:13 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ class Master {
     void run();
 
    private:
-    bool              _isRunning;
+    bool              _is_running;
     const std::string _configFilePath;
 
     std::vector<Config*>      _configs;

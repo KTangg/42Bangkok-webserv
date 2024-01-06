@@ -1,33 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cgi.hpp                                            :+:      :+:    :+:   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/03 20:20:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
+/*   Created: 2024/01/04 15:41:34 by spoolpra          #+#    #+#             */
+/*   Updated: 2024/01/04 15:44:31 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __CGI_HPP__
-#define __CGI_HPP__
+#ifndef __SERVER_HPP__
+#define __SERVER_HPP__
 
-#include <string>
+#include <config/ServerConfig.hpp>
 
-class Cgi {
+class Server {
    public:
-    Cgi(const std::string& path, const std::string& extension);
-    ~Cgi();
+    Server(const ServerConfig& config);
+    ~Server();
 
-    const std::string& get_path() const;
-    const std::string& getExtension() const;
-
-    // TODO: Add execute method.
+    const ServerConfig& getConfig() const;
 
    private:
-    const std::string _path;
-    const std::string _extension;
+    ServerConfig _config;
 };
 
-#endif /* __CGI_HPP__ */
+#endif /* __SERVER_HPP__ */

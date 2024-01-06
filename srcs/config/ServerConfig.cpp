@@ -6,38 +6,39 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 22:41:37 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:26:41 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "config/ServerConfig.hpp"
 
 namespace ft {
-    std::map<int, ErrorPage> initializeErrorPages() {
-        std::map<int, ErrorPage> defaultErrorPages;
+    std::map<int, ErrorPage> initialize_error_pages() {
+        std::map<int, ErrorPage> default_error_pages;
 
-        for (std::vector<int>::const_iterator it = ft::defaultErrorCode.begin();
-             it != ft::defaultErrorCode.end(); ++it) {
-            defaultErrorPages.insert(std::pair<int, ErrorPage>(*it, ErrorPage(*it, "")));
+        for (std::vector<int>::const_iterator it = ft::default_error_code.begin();
+             it != ft::default_error_code.end(); ++it) {
+            default_error_pages.insert(std::pair<int, ErrorPage>(*it, ErrorPage(*it, "")));
         }
 
-        return defaultErrorPages;
+        return default_error_pages;
     }
+
 }  // namespace ft
 
 /**
  * @brief Construct a new ServerConfig:: ServerConfig object
  *
  * @param name The name of the server.
- * @param maxBodySize The maximum body size allowed.
- * @param errorPages The error pages.
+ * @param max_body_size The maximum body size allowed.
+ * @param error_pages The error pages.
  * @param routes The routes.
  */
-ServerConfig::ServerConfig(const std::string&                  name,
-                           const size_t&                       maxBodySize,
-                           const std::map<std::string, Route>& routes,
-                           const std::map<int, ErrorPage>&     errorPages)
-    : _name(name), _maxBodySize(maxBodySize), _errorPages(errorPages), _routes(routes) {
+ServerConfig::ServerConfig(const std::map<std::string, Route>& routes,
+                           const std::string&                  name,
+                           const size_t&                       max_body_size,
+                           const std::map<int, ErrorPage>&     error_pages)
+    : _name(name), _max_body_size(max_body_size), _error_pages(error_pages), _routes(routes) {
 }
 
 /**
@@ -52,7 +53,7 @@ ServerConfig::~ServerConfig() {
  *
  * @return const std::string& The name of the server.
  */
-const std::string& ServerConfig::getName() const {
+const std::string& ServerConfig::get_name() const {
     return _name;
 }
 
@@ -61,8 +62,8 @@ const std::string& ServerConfig::getName() const {
  *
  * @return const size_t& The maximum body size allowed.
  */
-const size_t& ServerConfig::getMaxBodySize() const {
-    return _maxBodySize;
+const size_t& ServerConfig::get_max_body_size() const {
+    return _max_body_size;
 }
 
 /**
@@ -71,10 +72,10 @@ const size_t& ServerConfig::getMaxBodySize() const {
  * @param code The code of the error page.
  * @return const ErrorPage& The error page.
  */
-const ErrorPage& ServerConfig::getErrorPage(int code) const {
-    std::map<int, ErrorPage>::const_iterator it = _errorPages.find(code);
+const ErrorPage& ServerConfig::get_error_page(int code) const {
+    std::map<int, ErrorPage>::const_iterator it = _error_pages.find(code);
 
-    if (it == _errorPages.end()) {
+    if (it == _error_pages.end()) {
         throw std::out_of_range("Error page not found");
     }
 
@@ -87,7 +88,7 @@ const ErrorPage& ServerConfig::getErrorPage(int code) const {
  * @param path The path of the route.
  * @return const Route& The route.
  */
-const Route& ServerConfig::getRoute(const std::string& path) const {
+const Route& ServerConfig::get_route(const std::string& path) const {
     std::map<std::string, Route>::const_iterator it = _routes.find(path);
 
     if (it == _routes.end()) {

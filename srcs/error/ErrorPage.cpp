@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 21:46:27 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/03 22:44:03 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/06 14:35:37 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ ErrorPage::~ErrorPage() {
  *
  * @return const int& The code of the error page.
  */
-const int& ErrorPage::getCode() const {
+const int& ErrorPage::get_code() const {
     return _code;
 }
 
@@ -41,7 +41,7 @@ const int& ErrorPage::getCode() const {
  *
  * @return const std::string& The path to the error page.
  */
-const std::string& ErrorPage::getPath() const {
+const std::string& ErrorPage::get_path() const {
     return _path;
 }
 
@@ -50,9 +50,9 @@ const std::string& ErrorPage::getPath() const {
  *
  * @return const std::string& The error string.
  */
-const std::string& ErrorPage::getErrorString() const {
+const std::string ErrorPage::get_error_string() const {
     try {
-        return ft::httpStatusCodes.at(_code);
+        return ft::http_status_codes.at(_code);
     } catch (const std::out_of_range& e) {
         // Return internal server error incase of invalid code
         return UNDEFINED_ERROR;
@@ -64,11 +64,11 @@ const std::string& ErrorPage::getErrorString() const {
  *
  * @return const std::string& The error page.
  */
-const std::string& ErrorPage::getErrorPage() const {
+const std::string ErrorPage::get_error_page() const {
     try {
-        return _M_readErrorPage();
+        return _M_read_error_page();
     } catch (const std::runtime_error& e) {
-        return _M_getDefaultErrorPage();
+        return _M_get_default_error_page();
     }
 }
 
@@ -77,8 +77,8 @@ const std::string& ErrorPage::getErrorPage() const {
  *
  * @return std::string The error page.
  */
-std::string ErrorPage::_M_readErrorPage() const {
-    std::ifstream file(_path);
+std::string ErrorPage::_M_read_error_page() const {
+    std::ifstream file(_path.c_str());
     std::string   line;
     std::string   errorPage;
 
@@ -106,12 +106,12 @@ std::string ErrorPage::_M_readErrorPage() const {
  *
  * @return std::string The default error page.
  */
-std::string ErrorPage::_M_getDefaultErrorPage() const {
+std::string ErrorPage::_M_get_default_error_page() const {
     std::string errorPage;
     std::string errorString;
 
     try {
-        errorString = ft::httpStatusCodes.at(_code);
+        errorString = ft::http_status_codes.at(_code);
     } catch (const std::out_of_range& e) {
         // Return Undefined error incase of invalid code
         errorString = UNDEFINED_ERROR;
@@ -125,7 +125,7 @@ std::string ErrorPage::_M_getDefaultErrorPage() const {
     errorPage += "<title>Error</title>\n";
     errorPage += "</head>\n";
     errorPage += "<body>\n";
-    errorPage += "<h1>Error " + std::to_string(_code) + "</h1>\n";
+    errorPage += "<h1>Error " + ft::to_string(_code) + "</h1>\n";
     errorPage += "<p>" + errorString + "</p>\n";
     errorPage += "</body>\n";
     errorPage += "</html>\n";

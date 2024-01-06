@@ -1,33 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Cgi.hpp                                            :+:      :+:    :+:   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/03 20:20:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
+/*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
+/*   Updated: 2024/01/04 15:44:33 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __CGI_HPP__
-#define __CGI_HPP__
+#include "server/Server.hpp"
 
-#include <string>
+/**
+ * @brief Construct a new Server:: Server object
+ *
+ * @param config
+ */
+Server::Server(const ServerConfig& config) : _config(config) {}
 
-class Cgi {
-   public:
-    Cgi(const std::string& path, const std::string& extension);
-    ~Cgi();
+/**
+ * @brief Destroy the Server:: Server object
+ *
+ */
+Server::~Server() {}
 
-    const std::string& get_path() const;
-    const std::string& getExtension() const;
+/**
+ * @brief Get the Config object
+ *
+ * @return const ServerConfig&
+ */
+const ServerConfig& Server::getConfig() const { return _config; }
 
-    // TODO: Add execute method.
-
-   private:
-    const std::string _path;
-    const std::string _extension;
-};
-
-#endif /* __CGI_HPP__ */
