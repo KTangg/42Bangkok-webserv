@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2024/01/06 14:37:09 by spoolpra         ###   ########.fr        #
+#    Updated: 2024/01/07 03:24:30 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,7 @@ SRCS =	main.cpp \
 		logger/Logger.cpp \
 		parser/Parser.cpp \
 		route/Route.cpp route/Cgi.cpp \
+		server/Master.cpp server/Worker.cpp server/Server.cpp server/Poller.cpp \
 		utils/status_code.cpp \
 
 INCS = -I includes/ -I srcs/
@@ -51,6 +52,6 @@ fclean-client:
 	$(RM) client
 
 client:
-	$(CC) client.cpp -o client
+	$(CC) srcs/client.cpp -o client
 
 re-c: fclean-client client

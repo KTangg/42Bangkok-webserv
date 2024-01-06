@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 00:17:14 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:08:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,35 +27,15 @@ namespace ft {
 }  // namespace ft
 
 /**
- * @brief Construct a new ServerConfig:: ServerConfig object
- *
- */
-ServerConfig::ServerConfig() {
-}
-
-/**
- * @brief Construct a new ServerConfig:: ServerConfig object
+ * @brief Construct a new Server Config:: Server Config object
  *
  * @param src The object to do the copy.
  */
-ServerConfig::ServerConfig(const ServerConfig& src) {
-    *this = src;
-}
-
-/**
- * @brief Copy this object.
- *
- * @param rhs The object to copy.
- * @return ServerConfig& A reference to the copied object.
- */
-ServerConfig& ServerConfig::operator=(const ServerConfig& rhs) {
-    if (this != &rhs) {
-        _name = rhs._name;
-        _max_body_size = rhs._max_body_size;
-        _error_pages = rhs._error_pages;
-        _routes = rhs._routes;
-    }
-    return *this;
+ServerConfig::ServerConfig(const ServerConfig& src)
+    : _name(src._name),
+      _max_body_size(src._max_body_size),
+      _error_pages(src._error_pages),
+      _routes(src._routes) {
 }
 
 /**
@@ -128,40 +108,4 @@ const Route& ServerConfig::get_route(const std::string& path) const {
     }
 
     return it->second;
-}
-
-/**
- * @brief Sets the name of the server.
- *
- * @param name The name of the server.
- */
-void ServerConfig::set_name(const std::string& name) {
-    _name = name;
-}
-
-/**
- * @brief Sets the maximum body size allowed.
- *
- * @param max_body_size The maximum body size allowed.
- */
-void ServerConfig::set_max_body_size(const size_t& max_body_size) {
-    _max_body_size = max_body_size;
-}
-
-/**
- * @brief Sets the error pages.
- *
- * @param error_pages The error pages.
- */
-void ServerConfig::set_error_pages(const std::map<int, ErrorPage>& error_pages) {
-    _error_pages = error_pages;
-}
-
-/**
- * @brief Sets the routes.
- *
- * @param routes The routes.
- */
-void ServerConfig::set_routes(const std::map<std::string, Route>& routes) {
-    _routes = routes;
 }

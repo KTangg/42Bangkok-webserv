@@ -1,5 +1,7 @@
 
-#include "parser/Parser.hpp"
+#include "webserv.hpp"
+
+Master* g_master = NULL;
 
 int main(int argc, char** argv) {
     Logger logger("webserv");
@@ -8,13 +10,8 @@ int main(int argc, char** argv) {
         logger.log(Logger::ERROR, "Usage: ./webserv <config_file>");
         return 1;
     }
+    Master master(argv[1]);
 
-    try {
-        Parser parser(argv[1]);
-        parser.parse();
-    } catch (const std::runtime_error& e) {
-        return 1;
-    }
-
-    return 0;
+    master.init();
+    master.run();
 }

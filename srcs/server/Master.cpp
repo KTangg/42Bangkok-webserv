@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 13:51:30 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 03:12:43 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,13 @@
 /**
  * @brief Construct a new Master:: Master object
  *
- * @param configFilePath the path to the config file
+ * @param config_file_path Path to the config file
  */
-Master::Master(const std::string& configFilePath) {
-    this->_is_running = false;
-    this->_configFilePath = configFilePath;
+Master::Master(const std::string& config_file_path)
+    : _logger("Master"), _config_file_path(config_file_path), _is_running(false) {
+    g_master = this;
 
-    // Handler sigint to gracfelly exit
-    std::signal(SIGINT, _M_signalHandler);
+    std::signal(SIGINT, _S_signal_handler);
 }
 
 /**
@@ -36,80 +35,131 @@ Master::~Master() {
 }
 
 /**
- * @brief Construct workers from config file
+ * @brief Check if the master is running
  *
+ * @return true if the master is running
+ * @return false otherwise
  */
-void Master::init() {
-    _M_loadConfig();
-
-    for (std::vector<Config*>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
-        _workers.push_back(new Worker(it, *this));
-    }
+bool Master::is_running() const {
+    return _is_running;
 }
 
 /**
- * @brief Run each worker in a thread
+ * @brief Set the is running flag
+ *
+ * @param is_running true if the master is running
+ */
+void Master::set_is_running(bool is_running) {
+    _is_running = is_running;
+}
+
+/**
+ * @brief Load the config file and create the workers
+ *
+ */
+void Master::init() {
+    _M_load_config();
+    _M_create_workers();
+}
+
+/**
+ * @brief Run the workers
  *
  */
 void Master::run() {
-    _M_runWorker();
+    _logger.log(Logger::DEBUG, "Running workers");
+    _is_running = true;
+    _M_run_workers();
 
+    // Wait for the SIGINT signal
     while (_is_running) {
         sleep(1);
     }
 
-    _M_waitForWorker();
+    // Wait for the workers to finish
+    _M_wait_for_workers();
 }
 
 /**
- * @brief Load config file and create config objects
+ * @brief Load the config file
  *
  */
-void Master::_M_loadConfig() {
-    Parser parser(_configFilePath);
+void Master::_M_load_config() {
+    Parser parser(_config_file_path);
     parser.parse();
 
-    std::vector<Config*> configs = parser.getConfigs();
-    for (std::vector<Config*>::iterator it = configs.begin(); it != configs.end(); ++it) {
+    for (std::vector<Config>::const_iterator it = parser.get_configs().begin();
+         it != parser.get_configs().end(); ++it) {
         _configs.push_back(*it);
     }
+
+    _logger.log(Logger::DEBUG, "Loaded " + ft::to_string(_configs.size()) + " configs");
 }
 
 /**
- * @brief Run each worker in a thread, change _is_running to true
+ * @brief Create the workers
  *
  */
-void Master::_M_runWorker() {
-    this->_is_running = true;
+void Master::_M_create_workers() {
+    for (std::vector<Config>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
+        Worker* worker = new Worker(*it, *this);
+        worker->init();
 
+        _workers.push_back(worker);
+    }
+}
+
+/**
+ * @brief Run the workers
+ *
+ */
+void Master::_M_run_workers() {
     for (std::vector<Worker*>::iterator it = _workers.begin(); it != _workers.end(); ++it) {
-        if (_is_running == false) {
-            break;
+        pthread_t thread;
+
+        int ret = pthread_create(&thread, NULL, _S_worker_routine, *it);
+
+        if (ret != 0) {
+            _logger.log(Logger::ERROR, "Failed to create a worker thread");
         }
-        std::thread workerThread(&Worker::run, *it);
-        _threads.push_back(&workerThread);
+
+        _threads.push_back(thread);
     }
 }
 
 /**
- * @brief Wait for each worker thread to finish
+ * @brief Wait for the workers to finish
  *
  */
-void Master::_M_waitForWorker() {
-    for (std::vector<std::thread*>::iterator it = _threads.begin(); it != _threads.end(); ++it) {
-        if ((*it)->joinable()) {
-            (*it)->join();
-        }
+void Master::_M_wait_for_workers() {
+    for (std::vector<pthread_t>::iterator it = _threads.begin(); it != _threads.end(); ++it) {
+        pthread_join(*it, NULL);
     }
 }
 
 /**
- * @brief Handle SIGINT signal
+ * @brief Worker routine
  *
- * @param signum the signal number
+ * @param arg Pointer to the worker
+ * @return void* NULL
  */
-void Master::_M_signalHandler(int signum) {
+void* Master::_S_worker_routine(void* arg) {
+    Worker* worker = static_cast<Worker*>(arg);
+
+    worker->run();
+
+    return NULL;
+}
+
+/**
+ * @brief Signal handler
+ *
+ * @param signum Signal number
+ */
+void Master::_S_signal_handler(int signum) {
     if (signum == SIGINT) {
-        _is_running = false;
+        if (g_master != NULL) {
+            g_master->set_is_running(false);
+        }
     }
 }
