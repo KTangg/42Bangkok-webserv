@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 17:37:24 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:29:00 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:47:53 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,12 @@
 /**
  * @brief Construct a new Logger:: Logger object
  *
+ * @param src the object to do the copy
  */
-Logger::Logger() {
-    _pid = getpid();
-    _M_setLogLevel();
-    _logStream = &std::cout;
-    _logErrorStream = &std::cerr;
+Logger::Logger(const Logger& src) : _name(src._name), _pid(getpid()) {
+    _level = src._level;
+    _log_stream = src._log_stream;
+    _log_error_stream = src._log_error_stream;
 }
 
 /**
@@ -28,12 +28,10 @@ Logger::Logger() {
  *
  * @param name the name of the logger
  */
-Logger::Logger(const std::string& name) {
-    _pid = getpid();
-    _M_setLogLevel();
-    _name = name;
-    _logStream = &std::cout;
-    _logErrorStream = &std::cerr;
+Logger::Logger(const std::string& name) : _name(name), _pid(getpid()) {
+    _M_set_log_level();
+    _log_stream = &std::cout;
+    _log_error_stream = &std::cerr;
 }
 
 /**
@@ -41,17 +39,8 @@ Logger::Logger(const std::string& name) {
  *
  */
 Logger::~Logger() {
-    _logStream = NULL;
-    _logErrorStream = NULL;
-}
-
-/**
- * @brief Set the name of the logger
- *
- * @param name the name of the logger
- */
-void Logger::setName(const std::string& name) {
-    _name = name;
+    _log_stream = NULL;
+    _log_error_stream = NULL;
 }
 
 // /**
@@ -61,18 +50,18 @@ void Logger::setName(const std::string& name) {
 //  */
 // Logger::Logger(const std::string& filename) {
 //     _logFile.open(filename);
-//     _M_setLogLevel();
+//     _M_set_log_level();
 
 //     if (_logFile.fail()) {
 //         std::cerr
 //             << "Failed to open log file. Using stderr for error messages and stdout for other
 //             logs."
 //             << std::endl;
-//         _logErrorStream = &std::cerr;
-//         _logStream = &std::cout;
+//         _log_error_stream = &std::cerr;
+//         _log_stream = &std::cout;
 //     } else {
-//         _logErrorStream = &_logFile;
-//         _logStream = &_logFile;
+//         _log_error_stream = &_logFile;
+//         _log_stream = &_logFile;
 //     }
 // }
 
@@ -82,34 +71,34 @@ void Logger::setName(const std::string& name) {
  * @param level the log level
  * @param message the message
  */
-void Logger::log(LogLevel level, const std::string& message) {
+void Logger::log(LogLevel level, const std::string& message) const {
     if (level < _level) {
         return;
     }
 
-    std::string levelStr;
+    std::string level_str;
 
     switch (level) {
         case DEBUG:
-            levelStr = "DEBUG";
+            level_str = "DEBUG";
             break;
         case INFO:
-            levelStr = "INFO";
+            level_str = "INFO";
             break;
         case WARNING:
-            levelStr = "WARNING";
+            level_str = "WARNING";
             break;
         case ERROR:
-            levelStr = "ERROR";
+            level_str = "ERROR";
             break;
     }
 
     if (level == ERROR) {
-        *_logErrorStream << RED_START << "[" << levelStr << "] " << ft::to_string(_pid) << " "
-                         << _name << " " << message << COLOR_END << std::endl;
+        *_log_error_stream << RED_START << "[" << level_str << "] " << ft::to_string(_pid) << " "
+                           << _name << " " << message << COLOR_END << std::endl;
     } else {
-        *_logStream << YELLOW_START << "[" << levelStr << "] " << ft::to_string(_pid) << " "
-                    << _name << " " << message << COLOR_END << std::endl;
+        *_log_stream << YELLOW_START << "[" << level_str << "] " << ft::to_string(_pid) << " "
+                     << _name << " " << message << COLOR_END << std::endl;
     }
 }
 
@@ -118,17 +107,17 @@ void Logger::log(LogLevel level, const std::string& message) {
  *
  * @param level the log level
  */
-void Logger::_M_setLogLevel() {
-    const char* envLogLevel = std::getenv("LOG_LEVEL");
-    if (envLogLevel == NULL) {
+void Logger::_M_set_log_level() {
+    const char* env_log_level = std::getenv("LOG_LEVEL");
+    if (env_log_level == NULL) {
         _level = INFO;  // Default log level
-    } else if (std::string(envLogLevel) == "DEBUG") {
+    } else if (std::string(env_log_level) == "DEBUG") {
         _level = DEBUG;
-    } else if (std::string(envLogLevel) == "INFO") {
+    } else if (std::string(env_log_level) == "INFO") {
         _level = INFO;
-    } else if (std::string(envLogLevel) == "WARNING") {
+    } else if (std::string(env_log_level) == "WARNING") {
         _level = WARNING;
-    } else if (std::string(envLogLevel) == "ERROR") {
+    } else if (std::string(env_log_level) == "ERROR") {
         _level = ERROR;
     } else {
         std::cerr << "Invalid LOG_LEVEL environment variable. Using INFO as default." << std::endl;

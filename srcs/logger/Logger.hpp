@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 17:36:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:52:10 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:46:55 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,24 +29,26 @@
 class Logger {
    public:
     enum LogLevel { DEBUG, INFO, WARNING, ERROR };
-    Logger();
+
+    Logger(const Logger& src);
     Logger(const std::string& name);
+
     ~Logger();
 
-    void setName(const std::string& name);
-    // Logger(const std::string& filename);
-
-    void log(LogLevel level, const std::string& message);
+    void log(LogLevel level, const std::string& message) const;
 
    private:
-    pid_t       _pid;
-    std::string _name;
-    LogLevel    _level;
-    // std::ofstream _logFile;
-    std::ostream* _logStream;
-    std::ostream* _logErrorStream;
+    Logger();
+    Logger& operator=(const Logger& rhs);
 
-    void _M_setLogLevel();
+    const std::string _name;
+    const pid_t       _pid;
+    LogLevel          _level;
+    // std::ofstream _logFile;
+    std::ostream* _log_stream;
+    std::ostream* _log_error_stream;
+
+    void _M_set_log_level();
 };
 
 #endif  // __LOGGER_HPP__
