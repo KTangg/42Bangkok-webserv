@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:44:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:39:16 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 01:09:32 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,27 +23,54 @@ namespace ft {
         std::vector<std::string> methods;
 
         methods.push_back("GET");
-        methods.push_back("POST");
-
-        // methods.push_back("HEAD");
-        // methods.push_back("PUT");
-        // methods.push_back("DELETE");
-        // methods.push_back("OPTIONS");
 
         return methods;
     }
 
     /**
-     * @brief Initialize the cgi extensions.
+     * @brief Initialize the index files.
      *
-     * @return std::map<std::string, Cgi> The cgi extensions.
+     * @return std::vector<std::string> The index files.
      */
-    std::map<std::string, Cgi> initialize_cgi_extension() {
-        std::map<std::string, Cgi> cgi_extensions;
+    std::vector<std::string> initialize_index_files() {
+        std::vector<std::string> index_files;
 
-        return cgi_extensions;
+        index_files.push_back("index.html");
+        index_files.push_back("index.htm");
+
+        return index_files;
     }
 }  // namespace ft
+
+/**
+ * @brief Construct a new Route:: Route object
+ *
+ * @param src The object to do the copy.
+ */
+Route::Route(const Route& src) {
+    *this = src;
+}
+
+/**
+ * @brief Assigns a Route object
+ *
+ * @param rhs The object to do the copy.
+ * @return Route& A reference to this object.
+ */
+Route& Route::operator=(const Route& rhs) {
+    if (this != &rhs) {
+        _path = rhs._path;
+        _root_directory = rhs._root_directory;
+        _methods = rhs._methods;
+        _redirect_path = rhs._redirect_path;
+        _directory_listing = rhs._directory_listing;
+        _index_files = rhs._index_files;
+        _upload_directory = rhs._upload_directory;
+        _cgi_extensions = rhs._cgi_extensions;
+    }
+
+    return *this;
+}
 
 /**
  * @brief Construct a new Route:: Route object
@@ -53,22 +80,25 @@ namespace ft {
  * @param methods The methods allowed for the route.
  * @param redirect_path The redirect path of the route.
  * @param directory_listing The directory listing of the route.
- * @param index_file The index file of the route.
- * @param cgi_extensionsThe cgi extensions of the route.
+ * @param index_files The index files of the route.
+ * @param upload_directory The upload directory of the route.
+ * @param cgi_extensions The cgi extensions of the route.
  */
 Route::Route(const std::string&                path,
              const std::string&                root_directory,
              const std::vector<std::string>&   methods,
              const std::string&                redirect_path,
              const bool&                       directory_listing,
-             const std::string&                index_file,
+             const std::vector<std::string>&   index_files,
+             const std::string&                upload_directory,
              const std::map<std::string, Cgi>& cgi_extensions)
     : _path(path),
+      _root_directory(root_directory),
       _methods(methods),
       _redirect_path(redirect_path),
-      _root_directory(root_directory),
       _directory_listing(directory_listing),
-      _index_file(index_file),
+      _index_files(index_files),
+      _upload_directory(upload_directory),
       _cgi_extensions(cgi_extensions) {
 }
 
@@ -80,7 +110,7 @@ Route::~Route() {
 }
 
 /**
- * @brief Returns the path of the route.
+ * @brief Get the path of the route.
  *
  * @return const std::string& The path of the route.
  */
@@ -89,10 +119,153 @@ const std::string& Route::get_path() const {
 }
 
 /**
- * @brief Returns true if the method is allowed for the route.
+ * @brief Get the root directory of the route.
+ *
+ * @return const std::string& The root directory of the route.
+ */
+const std::string& Route::get_root_directory() const {
+    return _root_directory;
+}
+
+/**
+ * @brief Get the methods allowed for the route.
+ *
+ * @return const std::vector<std::string>& The methods allowed for the route.
+ */
+const std::vector<std::string>& Route::get_methods() const {
+    return _methods;
+}
+
+/**
+ * @brief Get the redirect path of the route.
+ *
+ * @return const std::string& The redirect path of the route.
+ */
+const std::string& Route::get_redirect_path() const {
+    return _redirect_path;
+}
+
+/**
+ * @brief Get the directory listing of the route.
+ *
+ * @return const bool& The directory listing of the route.
+ */
+const bool& Route::is_directory_listing() const {
+    return _directory_listing;
+}
+
+/**
+ * @brief Get the index files of the route.
+ *
+ * @return const std::vector<std::string>& The index files of the route.
+ */
+const std::vector<std::string>& Route::get_index_files() const {
+    return _index_files;
+}
+
+/**
+ * @brief Get the upload directory of the route.
+ *
+ * @return const std::string& The upload directory of the route.
+ */
+const std::string& Route::get_upload_directory() const {
+    return _upload_directory;
+}
+
+/**
+ * @brief Get the cgi extensions of the route.
+ *
+ * @param extension The extension of the cgi.
+ * @return const Cgi& The cgi of the route.
+ */
+const Cgi& Route::get_cgi(const std::string& extension) const {
+    std::map<std::string, Cgi>::const_iterator it = _cgi_extensions.find(extension);
+
+    if (it == _cgi_extensions.end()) {
+        throw std::runtime_error("Cgi extension not found");
+    }
+
+    return it->second;
+}
+
+/**
+ * @brief Set the path of the route.
+ *
+ * @param path The path of the route.
+ */
+void Route::set_path(const std::string& path) {
+    _path = path;
+}
+
+/**
+ * @brief Set the root directory of the route.
+ *
+ * @param root_directory The root directory of the route.
+ */
+void Route::set_root_directory(const std::string& root_directory) {
+    _root_directory = root_directory;
+}
+
+/**
+ * @brief Set the methods allowed for the route.
+ *
+ * @param methods The methods allowed for the route.
+ */
+void Route::set_methods(const std::vector<std::string>& methods) {
+    _methods = methods;
+}
+
+/**
+ * @brief Set the redirect path of the route.
+ *
+ * @param redirect_path The redirect path of the route.
+ */
+void Route::set_redirect_path(const std::string& redirect_path) {
+    _redirect_path = redirect_path;
+}
+
+/**
+ * @brief Set the directory listing of the route.
+ *
+ * @param directory_listing The directory listing of the route.
+ */
+void Route::set_directory_listing(const bool& directory_listing) {
+    _directory_listing = directory_listing;
+}
+
+/**
+ * @brief Set the index files of the route.
+ *
+ * @param index_files The index files of the route.
+ */
+void Route::set_index_files(const std::vector<std::string>& index_files) {
+    _index_files = index_files;
+}
+
+/**
+ * @brief Set the upload directory of the route.
+ *
+ * @param upload_directory The upload directory of the route.
+ */
+void Route::set_upload_directory(const std::string& upload_directory) {
+    _upload_directory = upload_directory;
+}
+
+/**
+ * @brief Set the cgi extensions of the route.
+ *
+ * @param cgi_extensions The cgi extensions of the route.
+ */
+void Route::set_cgi_extensions(const std::map<std::string, Cgi>& cgi_extensions) {
+    _cgi_extensions = cgi_extensions;
+}
+
+/**
+ * @brief Check if the method is allowed for the route.
  *
  * @param method The method to check.
- * @return const bool& True if the method is allowed for the route.
+ * @return true If the method is allowed for the route.
+ * @return false If the method is not allowed for the route.
  */
 bool Route::is_method_allowed(const std::string& method) const {
     for (std::vector<std::string>::const_iterator it = _methods.begin(); it != _methods.end();
@@ -103,57 +276,4 @@ bool Route::is_method_allowed(const std::string& method) const {
     }
 
     return false;
-}
-
-/**
- * @brief Returns the redirect path of the route.
- *
- * @return const std::string& The redirect path of the route.
- */
-const std::string& Route::get_redirect_path() const {
-    return _redirect_path;
-}
-
-/**
- * @brief Returns the root directory of the route.
- *
- * @return const std::string& The root directory of the route.
- */
-const std::string& Route::get_root_directory() const {
-    return _root_directory;
-}
-
-/**
- * @brief Returns the index file of the route.
- *
- * @return const std::string& The index file of the route.
- */
-const std::string& Route::get_index_file() const {
-    return _index_file;
-}
-
-/**
- * @brief Returns true if the directory listing is allowed for the route.
- *
- * @return const bool& True if the directory listing is allowed for the route.
- */
-bool Route::is_directory_listing_allowed() const {
-    return _directory_listing;
-}
-
-/**
- * @brief Returns the cgi extension of the route.
- *
- * @param extension The extension of the cgi.
- * @return const Cgi& The cgi.
- */
-
-const Cgi& Route::get_cgi(const std::string& extension) const {
-    std::map<std::string, Cgi>::const_iterator it = _cgi_extensions.find(extension);
-
-    if (it == _cgi_extensions.end()) {
-        throw std::out_of_range("Cgi not found");
-    }
-
-    return it->second;
 }
