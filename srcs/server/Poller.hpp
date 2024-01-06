@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 16:28:55 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/04 22:31:49 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:51:19 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 #include "utils/utils.hpp"
 
 #ifndef DEFAULT_POLL_EVENT
-#define DEFAULT_POLL_EVENT = POLLIN | POLLOUT | POLLHUP | POLLERR | POLLNVAL
+#define DEFAULT_POLL_EVENT POLLIN | POLLOUT | POLLHUP | POLLERR | POLLNVAL
 #endif
 
 #ifndef DEFAULT_POLL_TIMEOUT
@@ -34,6 +34,8 @@ typedef std::vector<pollfd_t>::iterator poller_it_t;
 class Poller {
    public:
     Poller();
+    Poller(const Poller& src);
+
     ~Poller();
 
     const std::vector<pollfd_t>& get_fds() const;
@@ -46,7 +48,9 @@ class Poller {
     int poll(int timeout = DEFAULT_POLL_TIMEOUT);
 
    private:
-    Logger                _logger;
+    Poller& operator=(const Poller& src);
+
+    const Logger          _logger;
     std::vector<pollfd_t> _fds;
 };
 

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 16:41:39 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/04 21:38:02 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:51:11 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,16 @@
  * @brief Construct a new Poller:: Poller object
  *
  */
-Poller::Poller() : _fds() {
-    _logger.setName("Poller");
+Poller::Poller() : _logger("Poller"), _fds() {
+}
+
+/**
+ * @brief Construct a new Poller:: Poller object
+ *
+ * @param src the object to do the copy
+ */
+
+Poller::Poller(const Poller& src) : _logger("Poller"), _fds(src._fds) {
 }
 
 /**
