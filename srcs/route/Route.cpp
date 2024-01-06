@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:44:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 01:09:32 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 01:24:21 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,27 +49,6 @@ namespace ft {
  */
 Route::Route(const Route& src) {
     *this = src;
-}
-
-/**
- * @brief Assigns a Route object
- *
- * @param rhs The object to do the copy.
- * @return Route& A reference to this object.
- */
-Route& Route::operator=(const Route& rhs) {
-    if (this != &rhs) {
-        _path = rhs._path;
-        _root_directory = rhs._root_directory;
-        _methods = rhs._methods;
-        _redirect_path = rhs._redirect_path;
-        _directory_listing = rhs._directory_listing;
-        _index_files = rhs._index_files;
-        _upload_directory = rhs._upload_directory;
-        _cgi_extensions = rhs._cgi_extensions;
-    }
-
-    return *this;
 }
 
 /**
@@ -186,78 +165,6 @@ const Cgi& Route::get_cgi(const std::string& extension) const {
     }
 
     return it->second;
-}
-
-/**
- * @brief Set the path of the route.
- *
- * @param path The path of the route.
- */
-void Route::set_path(const std::string& path) {
-    _path = path;
-}
-
-/**
- * @brief Set the root directory of the route.
- *
- * @param root_directory The root directory of the route.
- */
-void Route::set_root_directory(const std::string& root_directory) {
-    _root_directory = root_directory;
-}
-
-/**
- * @brief Set the methods allowed for the route.
- *
- * @param methods The methods allowed for the route.
- */
-void Route::set_methods(const std::vector<std::string>& methods) {
-    _methods = methods;
-}
-
-/**
- * @brief Set the redirect path of the route.
- *
- * @param redirect_path The redirect path of the route.
- */
-void Route::set_redirect_path(const std::string& redirect_path) {
-    _redirect_path = redirect_path;
-}
-
-/**
- * @brief Set the directory listing of the route.
- *
- * @param directory_listing The directory listing of the route.
- */
-void Route::set_directory_listing(const bool& directory_listing) {
-    _directory_listing = directory_listing;
-}
-
-/**
- * @brief Set the index files of the route.
- *
- * @param index_files The index files of the route.
- */
-void Route::set_index_files(const std::vector<std::string>& index_files) {
-    _index_files = index_files;
-}
-
-/**
- * @brief Set the upload directory of the route.
- *
- * @param upload_directory The upload directory of the route.
- */
-void Route::set_upload_directory(const std::string& upload_directory) {
-    _upload_directory = upload_directory;
-}
-
-/**
- * @brief Set the cgi extensions of the route.
- *
- * @param cgi_extensions The cgi extensions of the route.
- */
-void Route::set_cgi_extensions(const std::map<std::string, Cgi>& cgi_extensions) {
-    _cgi_extensions = cgi_extensions;
 }
 
 /**

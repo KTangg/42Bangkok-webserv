@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 18:17:51 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 01:03:01 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 01:23:23 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,6 @@ namespace ft {
 class Route {
    public:
     Route(const Route& src);
-    Route& operator=(const Route& rhs);
-
     Route(const std::string&                path,
           const std::string&                root_directory,
           const std::vector<std::string>&   methods = ft::initialize_methods(),
@@ -50,28 +48,20 @@ class Route {
     const std::string&              get_upload_directory() const;
     const Cgi&                      get_cgi(const std::string& extension) const;
 
-    void set_path(const std::string& path);
-    void set_root_directory(const std::string& root_directory);
-    void set_methods(const std::vector<std::string>& methods);
-    void set_redirect_path(const std::string& redirect_path);
-    void set_directory_listing(const bool& directory_listing);
-    void set_index_files(const std::vector<std::string>& index_files);
-    void set_upload_directory(const std::string& upload_directory);
-    void set_cgi_extensions(const std::map<std::string, Cgi>& cgi_extensions);
-
     bool is_method_allowed(const std::string& method) const;
 
    private:
     Route();
+    Route& operator=(const Route& rhs);
 
-    std::string                _path;
-    std::string                _root_directory;
-    std::vector<std::string>   _methods;
-    std::string                _redirect_path;
-    bool                       _directory_listing;
-    std::vector<std::string>   _index_files;
-    std::string                _upload_directory;
-    std::map<std::string, Cgi> _cgi_extensions;
+    const std::string                _path;
+    const std::string                _root_directory;
+    const std::vector<std::string>   _methods;
+    const std::string                _redirect_path;
+    const bool                       _directory_listing;
+    const std::vector<std::string>   _index_files;
+    const std::string                _upload_directory;
+    const std::map<std::string, Cgi> _cgi_extensions;
 };
 
 #endif /* __ROUTE_HPP__ */
