@@ -6,11 +6,34 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:12:56 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 00:31:55 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "route/Cgi.hpp"
+
+/**
+ * @brief Construct a new Cgi:: Cgi object
+ *
+ * @param src The object to do the copy.
+ */
+Cgi::Cgi(const Cgi& src) {
+    *this = src;
+}
+
+/**
+ * @brief Copy this object.
+ *
+ * @param rhs The object to copy.
+ * @return Cgi& A reference to the copied object.
+ */
+Cgi& Cgi::operator=(const Cgi& rhs) {
+    if (this != &rhs) {
+        _path = rhs._path;
+        _extension = rhs._extension;
+    }
+    return *this;
+}
 
 /**
  * @brief Construct a new cgi::cgi object
@@ -45,4 +68,22 @@ const std::string& Cgi::get_path() const {
  */
 const std::string& Cgi::getExtension() const {
     return _extension;
+}
+
+/**
+ * @brief Sets the path to the CGI executable.
+ *
+ * @param path The path to the CGI executable.
+ */
+void Cgi::set_path(const std::string& path) {
+    _path = path;
+}
+
+/**
+ * @brief Sets the extension of the CGI executable.
+ *
+ * @param extension The extension of the CGI executable.
+ */
+void Cgi::set_extension(const std::string& extension) {
+    _extension = extension;
 }
