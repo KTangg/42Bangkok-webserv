@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 01:21:38 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:04:35 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,7 @@
  *
  * @param src The object to do the copy.
  */
-Cgi::Cgi(const Cgi& src) {
-    *this = src;
+Cgi::Cgi(const Cgi& src) : _path(src._path), _extension(src._extension) {
 }
 
 /**

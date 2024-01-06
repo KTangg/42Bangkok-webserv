@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:44:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 01:24:21 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 02:05:48 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,15 @@ namespace ft {
  *
  * @param src The object to do the copy.
  */
-Route::Route(const Route& src) {
-    *this = src;
+Route::Route(const Route& src)
+    : _path(src._path),
+      _root_directory(src._root_directory),
+      _methods(src._methods),
+      _redirect_path(src._redirect_path),
+      _directory_listing(src._directory_listing),
+      _index_files(src._index_files),
+      _upload_directory(src._upload_directory),
+      _cgi_extensions(src._cgi_extensions) {
 }
 
 /**
