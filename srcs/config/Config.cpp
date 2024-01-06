@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 16:44:16 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/04 21:44:20 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 00:04:11 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,10 +47,10 @@ const std::string& Config::get_host() const {
 /**
  * @brief Adds a server configuration to the configuration.
  *
- * @param serverConfig The server configuration to be added.
+ * @param server_config The server configuration to be added.
  */
-void Config::addServerConfig(ServerConfig* serverConfig) {
-    _serverConfigs.push_back(serverConfig);
+void Config::add_server_config(ServerConfig* server_config) {
+    _server_configs.push_back(server_config);
 }
 
 /**
@@ -58,6 +58,6 @@ void Config::addServerConfig(ServerConfig* serverConfig) {
  *
  * @return const std::vector<ServerConfig*>& The server configurations.
  */
-const std::vector<ServerConfig*>& Config::getServerConfigs() const {
-    return _serverConfigs;
+const std::vector<ServerConfig*>& Config::get_server_configs() const {
+    return _server_configs;
 }
