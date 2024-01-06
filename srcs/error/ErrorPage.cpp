@@ -6,11 +6,34 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 21:46:27 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:35:37 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 00:21:33 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "error/ErrorPage.hpp"
+
+/**
+ * @brief Construct a new Error Page:: Error Page object
+ *
+ * @param src
+ */
+ErrorPage::ErrorPage(const ErrorPage& src) {
+    *this = src;
+}
+
+/**
+ * @brief Copy this object.
+ *
+ * @param rhs The object to copy.
+ * @return ErrorPage& A reference to the copied object.
+ */
+ErrorPage& ErrorPage::operator=(const ErrorPage& rhs) {
+    if (this != &rhs) {
+        _code = rhs._code;
+        _path = rhs._path;
+    }
+    return *this;
+}
 
 /**
  * @brief Construct a new ErrorPage:: ErrorPage object
@@ -43,6 +66,24 @@ const int& ErrorPage::get_code() const {
  */
 const std::string& ErrorPage::get_path() const {
     return _path;
+}
+
+/**
+ * @brief Set the Code object
+ *
+ * @param code The code of the error page.
+ */
+void ErrorPage::set_code(const int& code) {
+    _code = code;
+}
+
+/**
+ * @brief Set the Path object
+ *
+ * @param path The path to the error page.
+ */
+void ErrorPage::set_path(const std::string& path) {
+    _path = path;
 }
 
 /**
