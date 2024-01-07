@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:01:38 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:24:10 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ class Worker {
     void init();
     void run();
 
+    bool is_running() const;
+
    private:
     Worker();
 
@@ -43,6 +45,7 @@ class Worker {
     int           _socket;
     Poller        _poller;
     const Master& _master;
+    bool          _is_running;
 
     sockaddr_in_t       _addr;
     std::vector<Server> _servers;

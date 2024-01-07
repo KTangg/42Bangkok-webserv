@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/19 22:19:47 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:25:18 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:23:17 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ class Master {
     void _M_load_config();
     void _M_create_workers();
     void _M_run_workers();
+    bool _M_check_workers_status();
     void _M_wait_for_workers();
 
     static void* _S_worker_routine(void* arg);

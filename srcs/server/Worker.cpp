@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:43:35 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:31:47 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,26 @@
 /**
  * @brief Construct a new Worker:: Worker object
  *
+ * @param src the object to do the copy
+ */
+Worker::Worker(const Worker& src)
+    : _logger("Worker"),
+      _socket(src._socket),
+      _poller(src._poller),
+      _master(src._master),
+      _is_running(src._is_running),
+      _addr(src._addr),
+      _servers(src._servers) {
+}
+
+/**
+ * @brief Construct a new Worker:: Worker object
+ *
  * @param config the config
  * @param master the master
  */
 Worker::Worker(const Config& config, const Master& master)
-    : _logger("Worker"), _socket(-1), _poller(), _master(master) {
+    : _logger("Worker"), _socket(-1), _poller(), _master(master), _is_running(false) {
     _M_init_addr(config.get_host().c_str(), config.get_port());
     _M_init_servers(config.get_server_configs());
 }
@@ -45,6 +60,7 @@ void Worker::init() {
  *
  */
 void Worker::run() {
+    _is_running = true;
     while (_master.is_running()) {
         try {
             _M_run();
@@ -53,6 +69,17 @@ void Worker::run() {
             break;
         }
     }
+    _is_running = false;
+}
+
+/**
+ * @brief Check if the worker is running
+ *
+ * @return true if the worker is running
+ * @return false otherwise
+ */
+bool Worker::is_running() const {
+    return _is_running;
 }
 
 /**

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:12:43 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/07 13:22:19 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,11 @@ void Master::run() {
     // Wait for the SIGINT signal
     while (_is_running) {
         sleep(1);
+
+        if (_M_check_workers_status() != 0) {
+            _logger.log(Logger::ERROR, "All workers are not running, exiting");
+            break;
+        }
     }
 
     // Wait for the workers to finish
