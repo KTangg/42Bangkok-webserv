@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2024/01/07 03:24:30 by spoolpra         ###   ########.fr        #
+#    Updated: 2024/01/08 14:27:35 by spoolpra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,11 +21,12 @@ NAME = webserv
 SRCS =	main.cpp \
 		config/Config.cpp config/ServerConfig.cpp\
 		error/ErrorPage.cpp \
+		handling/Request.cpp handling/Header.cpp handling/Response.cpp\
 		logger/Logger.cpp \
-		parser/Parser.cpp \
+		parser/Parser.cpp parser/RequestParser.cpp\
 		route/Route.cpp route/Cgi.cpp \
 		server/Master.cpp server/Worker.cpp server/Server.cpp server/Poller.cpp \
-		utils/status_code.cpp \
+		utils/utils.cpp utils/status_code.cpp \
 
 INCS = -I includes/ -I srcs/
 OBJS = $(SRCS:.cpp=.o)
