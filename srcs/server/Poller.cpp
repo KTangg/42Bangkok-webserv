@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 16:41:39 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:51:11 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/08 15:34:47 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,7 @@ std::vector<pollfd_t>::iterator Poller::remove_fd(std::vector<pollfd_t>::iterato
  * @return int the number of events
  */
 int Poller::poll(int timeout) {
-    _logger.log(Logger::DEBUG, "Polling " + ft::to_string(_fds.size()) + "fds");
+    _logger.log(Logger::DEBUG, "Polling " + ft::to_string(_fds.size()) + " fds");
 
     int i = ::poll(_fds.data(), _fds.size(), timeout);
 
