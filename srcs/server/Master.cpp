@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 13:22:19 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/08 14:37:08 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,7 +75,7 @@ void Master::run() {
     while (_is_running) {
         sleep(1);
 
-        if (_M_check_workers_status() != 0) {
+        if (!_M_check_workers_status()) {
             _logger.log(Logger::ERROR, "All workers are not running, exiting");
             break;
         }
@@ -130,6 +130,23 @@ void Master::_M_run_workers() {
 
         _threads.push_back(thread);
     }
+}
+
+/**
+ * @brief Check if the workers are running
+ *
+ * @return true if the workers are running
+ * @return false otherwise
+ */
+bool Master::_M_check_workers_status() {
+    for (std::vector<Worker*>::iterator it = _workers.begin(); it != _workers.end(); ++it) {
+        // If one worker is running return true
+        if ((*it)->is_running()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**

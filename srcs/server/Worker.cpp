@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 13:31:47 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/08 15:15:49 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,8 +206,9 @@ poller_it_t Worker::_M_handle_new_connection(poller_it_t& it) {
         return it;
     };
 
-    _logger.log(Logger::INFO, "New connection " + ft::to_string(client_fd) + " accepted");
+    _logger.log(Logger::DEBUG, "New connection " + ft::to_string(client_fd) + " accepted");
     _poller.add_fd(client_fd);
+    _M_add_client(client_fd);
 
     return _poller.get_fds_begin();
 }
@@ -220,6 +221,7 @@ poller_it_t Worker::_M_handle_new_connection(poller_it_t& it) {
 poller_it_t Worker::_M_handle_client_disconnection(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Client " + ft::to_string(it->fd) + " disconnected");
 
+    _M_remove_client(it->fd);
     close(it->fd);
 
     return _poller.remove_fd(it);
@@ -232,19 +234,30 @@ poller_it_t Worker::_M_handle_client_disconnection(poller_it_t& it) {
 void Worker::_M_handle_client_request(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Client " + ft::to_string(it->fd) + " sent a request");
 
-    char buf[1024];
-    int  ret = recv(it->fd, buf, 1024, 0);
+    std::size_t buffer_size = 1024;
 
-    if (ret == -1) {
-        _logger.log(Logger::ERROR, "Failed to receive data from client " + ft::to_string(it->fd));
-        it->revents |= POLLERR;
-    } else if (ret == 0) {
+    char buffer[buffer_size];
+    int  ret = 0;
+    int  tot_ret;
+
+    while ((ret = recv(it->fd, &buffer, buffer_size, 0)) > 0) {
+        tot_ret += ret;
+        _clients[it->fd].read(buffer, ret);
+    }
+
+    if (ret == -1 && tot_ret == 0) {
         it->revents |= POLLHUP;
     } else {
-        _logger.log(Logger::DEBUG, "Received " + ft::to_string(ret) + " bytes from client " +
+        _logger.log(Logger::DEBUG, "Received " + ft::to_string(tot_ret) + " bytes from client " +
                                        ft::to_string(it->fd));
     }
-    // TODO handle client request
+
+    // Debug Request
+    // _logger.log(Logger::DEBUG, "Request: " + _clients[it->fd].get_method() + " " +
+    //                                _clients[it->fd].get_uri() + " " +
+    //                                _clients[it->fd].get_version());
+    // _logger.log(Logger::DEBUG, "Headers: " + _clients[it->fd].get_headers().to_string());
+    // _logger.log(Logger::DEBUG, "Body: " + _clients[it->fd].get_body());
 }
 
 /**
@@ -255,7 +268,7 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
     // TODO handle server response
-    std::string res = "HTTP/1.1 200 OK\r\n\r\nHello World!";
+    std::string res = _clients[it->fd].get_response();
 
     int ret = send(it->fd, res.c_str(), res.size(), 0);
 
@@ -269,11 +282,33 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
 }
 
 /**
+ * @brief Add a client to the map
+ *
+ * @param fd the client fd
+ */
+void Worker::_M_add_client(int fd) {
+    _clients.insert(std::pair<int, Request>(fd, Request()));
+}
+
+/**
+ * @brief Remove a client from the map
+ *
+ * @param fd the client fd
+ */
+void Worker::_M_remove_client(int fd) {
+    _clients.erase(fd);
+}
+
+/**
  * @brief Set a file descriptor to non blocking
  *
  * @param fd the file descriptor
  * @return int 0 on success, -1 on error
  */
 int Worker::_S_non_block_fd(int fd) {
+    int keep_alive = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keep_alive, sizeof(keep_alive)) < 0) {
+        return -1;
+    }
     return fcntl(fd, F_SETFL, O_NONBLOCK);
 }

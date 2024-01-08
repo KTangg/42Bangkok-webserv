@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 03:17:00 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:26:33 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/08 14:59:02 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
     buffer[n] = '\0';
     printf("%s\n", buffer);
 
+    shutdown(sockfd, SHUT_RDWR);
     close(sockfd);
 
     return 0;
