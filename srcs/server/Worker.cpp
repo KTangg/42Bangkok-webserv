@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 15:15:49 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/08 15:27:59 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,14 +238,14 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
 
     char buffer[buffer_size];
     int  ret = 0;
-    int  tot_ret;
+    int  tot_ret = 0;
 
     while ((ret = recv(it->fd, &buffer, buffer_size, 0)) > 0) {
         tot_ret += ret;
         _clients[it->fd].read(buffer, ret);
     }
 
-    if (ret == -1 && tot_ret == 0) {
+    if ((ret == -1 && tot_ret == 0) || ret == 0) {
         it->revents |= POLLHUP;
     } else {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(tot_ret) + " bytes from client " +
