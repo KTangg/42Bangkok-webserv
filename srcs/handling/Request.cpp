@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:43 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 14:34:03 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 12:11:23 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -178,6 +178,16 @@ std::size_t Request::get_content_length() const {
  */
 void Request::set_response_status_code(int code) {
     _response.set_status_code(code);
+}
+
+/**
+ * @brief Check if the request is ready to respond
+ *
+ * @return true If the request is ready to respond
+ * @return false If the request is not ready to respond
+ */
+bool Request::ready_to_respond() const {
+    return _response.is_ready();
 }
 
 /**

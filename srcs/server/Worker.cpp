@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 15:27:59 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 12:10:45 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,7 +245,7 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
         _clients[it->fd].read(buffer, ret);
     }
 
-    if ((ret == -1 && tot_ret == 0) || ret == 0) {
+    if ( ret == -1 || tot_ret == 0) {
         it->revents |= POLLHUP;
     } else {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(tot_ret) + " bytes from client " +
@@ -266,6 +266,10 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
  */
 void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
+
+    if (!_clients[it->fd].ready_to_respond()) {
+        return;
+    }
 
     // TODO handle server response
     std::string res = _clients[it->fd].get_response();

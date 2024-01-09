@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:35 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 14:25:33 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 12:11:01 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Request {
     std::size_t get_content_length() const;
 
     void        set_response_status_code(int code);
+    bool        ready_to_respond() const;
     std::string get_response() const;
 
     void read(const char* buffer, size_t size);
