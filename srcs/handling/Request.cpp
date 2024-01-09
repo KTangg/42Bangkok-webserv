@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:43 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 12:11:23 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:10:36 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
  * @brief Construct a new Request:: Request object
  *
  */
-Request::Request() : _parser(*this) {
+Request::Request() : _start_time(std::time(NULL)), _parser(*this) {
 }
 
 /**
@@ -25,7 +25,8 @@ Request::Request() : _parser(*this) {
  * @param src The object to do the copy
  */
 Request::Request(const Request& src)
-    : _method(src._method),
+    : _start_time(src._start_time),
+      _method(src._method),
       _uri(src._uri),
       _version(src._version),
       _headers(src._headers),
@@ -95,6 +96,15 @@ void Request::add_body(const std::string& body) {
     }
 
     _body += body;
+}
+
+/**
+ * @brief Get the start time of the request
+ *
+ * @return std::size_t The start time of the request
+ */
+std::size_t Request::get_start_time_ms() const {
+    return TIME_T_TO_MS(_start_time);
 }
 
 /**

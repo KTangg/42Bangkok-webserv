@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 14:52:44 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:11:20 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,8 @@
 #include "server/Poller.hpp"
 #include "server/Server.hpp"
 #include "utils/exception.hpp"
+
+#define DEFAULT_TIMEOUT_MS 10000
 
 typedef struct sockaddr_in sockaddr_in_t;
 class Master;  // Forward declaration of Master class
@@ -73,7 +75,10 @@ class Worker {
     void _M_add_client(int fd);
     void _M_remove_client(int fd);
 
-    static int _S_non_block_fd(int fd);
+    void _M_process_server_response(Request& request) const;
+
+    static int  _S_non_block_fd(int fd);
+    static bool _S_check_timeout(const Request& request);
 };
 
 #endif /* __WORKER_HPP__ */

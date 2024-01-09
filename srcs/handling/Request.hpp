@@ -6,13 +6,14 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:35 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 12:11:01 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:08:05 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __REQUEST_HPP__
 #define __REQUEST_HPP__
 
+#include <ctime>
 #include <map>
 #include <string>
 
@@ -32,6 +33,7 @@ class Request {
     void add_header(const std::string& key, const std::string& value);
     void add_body(const std::string& body);
 
+    std::size_t        get_start_time_ms() const;
     const std::string& get_method() const;
     const std::string& get_uri() const;
     const std::string& get_version() const;
@@ -51,11 +53,12 @@ class Request {
    private:
     Request& operator=(const Request& src);
 
-    std::string _method;
-    std::string _uri;
-    std::string _version;
-    Header      _headers;
-    std::string _body;
+    const std::time_t _start_time;
+    std::string       _method;
+    std::string       _uri;
+    std::string       _version;
+    Header            _headers;
+    std::string       _body;
 
     Response _response;
 

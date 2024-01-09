@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 12:10:45 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:13:29 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,12 +240,19 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     int  ret = 0;
     int  tot_ret = 0;
 
+    // Check if timeout
+    if (_S_check_timeout(_clients[it->fd])) {
+        _clients[it->fd].set_response_status_code(408);
+        it->revents |= POLLHUP;
+        return;
+    }
+
     while ((ret = recv(it->fd, &buffer, buffer_size, 0)) > 0) {
         tot_ret += ret;
         _clients[it->fd].read(buffer, ret);
     }
 
-    if ( ret == -1 || tot_ret == 0) {
+    if (ret == -1 || tot_ret == 0) {
         it->revents |= POLLHUP;
     } else {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(tot_ret) + " bytes from client " +
@@ -265,7 +272,7 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
  *
  */
 void Worker::_M_handle_server_response(poller_it_t& it) {
-    _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
+    _M_process_server_response(_clients[it->fd]);
 
     if (!_clients[it->fd].ready_to_respond()) {
         return;
@@ -304,6 +311,20 @@ void Worker::_M_remove_client(int fd) {
 }
 
 /**
+ * @brief Process the server response
+ *
+ * @param request the request
+ */
+void Worker::_M_process_server_response(Request& request) const {
+    if (_S_check_timeout(request)) {
+        request.set_response_status_code(408);
+        return;
+    } else {
+        request.set_response_status_code(200);
+    }
+}
+
+/**
  * @brief Set a file descriptor to non blocking
  *
  * @param fd the file descriptor
@@ -315,4 +336,18 @@ int Worker::_S_non_block_fd(int fd) {
         return -1;
     }
     return fcntl(fd, F_SETFL, O_NONBLOCK);
+}
+
+/**
+ * @brief Check if the request has timed out
+ *
+ * @param request the request
+ * @return true if the request has timed out
+ * @return false otherwise
+ */
+bool Worker::_S_check_timeout(const Request& request) {
+    if ((request.get_start_time_ms() + DEFAULT_TIMEOUT_MS) < TIME_T_TO_MS(std::time(NULL))) {
+        return false;
+    }
+    return true;
 }

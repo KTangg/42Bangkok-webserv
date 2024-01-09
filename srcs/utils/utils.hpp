@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 18:31:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 11:10:40 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:11:04 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#define TIME_T_TO_MS(x) (x * 1000)
 
 namespace ft {
     template <typename T>
