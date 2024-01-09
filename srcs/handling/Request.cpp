@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:43 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 13:10:36 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:48:52 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
  * @brief Construct a new Request:: Request object
  *
  */
-Request::Request() : _start_time(std::time(NULL)), _parser(*this) {
+Request::Request() : _parser(*this) {
 }
 
 /**
@@ -25,8 +25,7 @@ Request::Request() : _start_time(std::time(NULL)), _parser(*this) {
  * @param src The object to do the copy
  */
 Request::Request(const Request& src)
-    : _start_time(src._start_time),
-      _method(src._method),
+    : _method(src._method),
       _uri(src._uri),
       _version(src._version),
       _headers(src._headers),
@@ -99,12 +98,12 @@ void Request::add_body(const std::string& body) {
 }
 
 /**
- * @brief Get the start time of the request
+ * @brief Set the complete flag of the request
  *
- * @return std::size_t The start time of the request
+ * @param complete The complete flag of the request
  */
-std::size_t Request::get_start_time_ms() const {
-    return TIME_T_TO_MS(_start_time);
+void Request::set_complete(const bool& complete) {
+    _is_complete = complete;
 }
 
 /**
@@ -141,6 +140,9 @@ const std::string& Request::get_version() const {
  * @return const std::string& The header of the request
  */
 std::string Request::get_header(const std::string& key) const {
+    // handle case insensitive
+    std::transform(key.begin(), key.end(), key.begin(), ::tolower);
+
     return _headers.get(key);
 }
 
@@ -160,6 +162,15 @@ const Header& Request::get_headers() const {
  */
 const std::string& Request::get_body() const {
     return _body;
+}
+
+/**
+ * @brief Get the complete flag of the request
+ *
+ * @return const bool& The complete flag of the request
+ */
+const bool& Request::is_complete() const {
+    return _is_complete;
 }
 
 /**

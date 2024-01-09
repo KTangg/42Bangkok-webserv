@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 18:42:24 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 14:28:24 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:48:43 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,12 @@ void RequestParser::parse(const char* buffer, size_t size) {
     // If the body is not parsed yet, parse it
     if (_body_end == std::string::npos) {
         _body_end = _M_parse_body();
+    }
+
+    // If all complete mark request as complete
+    if (_request_line_end != std::string::npos && _headers_end != std::string::npos &&
+        _body_end != std::string::npos) {
+        _request.set_complete(true);
     }
 }
 

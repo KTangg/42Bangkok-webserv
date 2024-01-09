@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 18:17:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/08 14:23:11 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:44:50 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,7 @@ class Header {
     std::string get(const std::string& key) const;
     std::string to_string() const;
 
-    void set_complete(bool is_complete);
-    bool is_complete() const;
-
    private:
-    bool                               _is_complete;
     std::map<std::string, std::string> _headers;
 };
 

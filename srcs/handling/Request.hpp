@@ -6,14 +6,14 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/07 16:01:35 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 13:08:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:47:28 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __REQUEST_HPP__
 #define __REQUEST_HPP__
 
-#include <ctime>
+#include <algorithm>
 #include <map>
 #include <string>
 
@@ -32,14 +32,15 @@ class Request {
     void set_version(const std::string& version);
     void add_header(const std::string& key, const std::string& value);
     void add_body(const std::string& body);
+    void set_complete(const bool& complete);
 
-    std::size_t        get_start_time_ms() const;
     const std::string& get_method() const;
     const std::string& get_uri() const;
     const std::string& get_version() const;
     std::string        get_header(const std::string& key) const;
     const Header&      get_headers() const;
     const std::string& get_body() const;
+    const bool&        is_complete() const;
 
     bool        is_chunked() const;
     std::size_t get_content_length() const;
@@ -53,13 +54,13 @@ class Request {
    private:
     Request& operator=(const Request& src);
 
-    const std::time_t _start_time;
-    std::string       _method;
-    std::string       _uri;
-    std::string       _version;
-    Header            _headers;
-    std::string       _body;
+    std::string _method;
+    std::string _uri;
+    std::string _version;
+    Header      _headers;
+    std::string _body;
 
+    bool     _is_complete;
     Response _response;
 
     RequestParser _parser;

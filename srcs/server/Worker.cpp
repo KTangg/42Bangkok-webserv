@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/09 13:13:29 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/01/09 13:44:07 by spoolpra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,7 +199,7 @@ poller_it_t Worker::_M_handle_new_connection(poller_it_t& it) {
     if (client_fd == -1) {
         _logger.log(Logger::ERROR, "Failed to accept connection");
     }
-    if (_S_non_block_fd(client_fd) == -1) {
+    if (_S_socket_options(client_fd) == -1) {
         _logger.log(Logger::ERROR, "Failed to set socket to non blocking");
 
         close(client_fd);
@@ -239,13 +239,6 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     char buffer[buffer_size];
     int  ret = 0;
     int  tot_ret = 0;
-
-    // Check if timeout
-    if (_S_check_timeout(_clients[it->fd])) {
-        _clients[it->fd].set_response_status_code(408);
-        it->revents |= POLLHUP;
-        return;
-    }
 
     while ((ret = recv(it->fd, &buffer, buffer_size, 0)) > 0) {
         tot_ret += ret;
@@ -316,38 +309,56 @@ void Worker::_M_remove_client(int fd) {
  * @param request the request
  */
 void Worker::_M_process_server_response(Request& request) const {
-    if (_S_check_timeout(request)) {
-        request.set_response_status_code(408);
-        return;
+    if (!request.is_complete()) {
+        return request.set_response_status_code(400);
+    }
+
+    std::string host = request.get_header("Host");
+
+    if (host.empty()) {
+        _servers[0].handle_request(request);
     } else {
-        request.set_response_status_code(200);
+        for (std::vector<Server>::const_iterator it = _servers.begin(); it != _servers.end();
+             ++it) {
+            if (it->get_name() == host) {
+                it->handle_request(request);
+                return;
+            }
+        }
+
+        _servers[0].handle_request(request);
     }
 }
 
 /**
- * @brief Set a file descriptor to non blocking
+ * @brief Set the socket to non blocking and set the timeout
  *
- * @param fd the file descriptor
- * @return int 0 on success, -1 on error
+ * @param fd the socket fd
+ * @return int 0 on success, -1 otherwise
  */
-int Worker::_S_non_block_fd(int fd) {
-    int keep_alive = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keep_alive, sizeof(keep_alive)) < 0) {
+int Worker::_S_socket_options(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) {
         return -1;
     }
-    return fcntl(fd, F_SETFL, O_NONBLOCK);
-}
 
-/**
- * @brief Check if the request has timed out
- *
- * @param request the request
- * @return true if the request has timed out
- * @return false otherwise
- */
-bool Worker::_S_check_timeout(const Request& request) {
-    if ((request.get_start_time_ms() + DEFAULT_TIMEOUT_MS) < TIME_T_TO_MS(std::time(NULL))) {
-        return false;
+    // Set the socket to non blocking
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        return -1;
     }
-    return true;
+
+    struct timeval timeout;
+    timeout.tv_sec = DEFAULT_TIMEOUT_S;
+    timeout.tv_usec = 0;
+
+    // Set the socket timeout
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == -1) {
+        return -1;
+    }
+
+    if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) == -1) {
+        return -1;
+    }
+
+    return 0;
 }
