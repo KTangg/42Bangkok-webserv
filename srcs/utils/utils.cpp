@@ -1,30 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.hpp                                          :+:      :+:    :+:   */
+/*   utils.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/04 18:31:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/25 16:21:46 by tratanat         ###   ########.fr       */
+/*   Created: 2024/02/25 16:21:10 by tratanat          #+#    #+#             */
+/*   Updated: 2024/02/25 16:22:27 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+#include "utils.hpp"
 
-#include <sstream>
+std::string ft::strip_space(std::string value) {
+    int i = 0;
 
-namespace ft {
-    template <typename T>
-    std::string to_string(T value) {
-        std::ostringstream os;
-        os << value;
-
-        return os.str();
-    }
-
-    std::string strip_space(std::string value);
-}  // namespace ft
-
-#endif /* __UTILS_HPP__ */
+    if (value.length() == 0) return value;
+    while (isspace(value[i])) i++;
+    if (i != 0) value = value.substr(i);
+    return value;
+}

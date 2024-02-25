@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 17:37:24 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:47:53 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 15:09:58 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,4 +123,8 @@ void Logger::_M_set_log_level() {
         std::cerr << "Invalid LOG_LEVEL environment variable. Using INFO as default." << std::endl;
         _level = INFO;
     }
+}
+
+void Logger::setName(std::string name) {
+    _name = name;
 }

@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 15:43:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 16:24:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,7 @@
  *
  * @param file_path the path to the config file
  */
-Parser::Parser(const std::string& file_path) {
-    _logger.setName("Parser");
-
+Parser::Parser(const std::string& file_path) : _logger("Parser") {
     // Check if file path available
     _M_check_file_path(file_path);
 
@@ -49,6 +47,7 @@ Parser::~Parser() {
  */
 void Parser::parse() {
     _logger.log(Logger::INFO, "Parsing config file");
+    _M_parse();
 }
 
 /**
@@ -106,11 +105,68 @@ void Parser::_S_check_file(std::ifstream& file) {
  *
  */
 void Parser::_M_parse() {
-    std::string  server_block;
-    ServerConfig server_config;
+    std::string server_block;
+    // ServerConfig server_config;
 
     // Get server blocks
-    while ((server_block = _M_get_server_block()) != "") {
-        server_config = _M_parse_server_block(server_block);
+    std::string content = _contents;
+    while (content != "") {
+        std::string block = _M_get_server_block(content);
+        Config      server_config = _M_parse_server_block(block);
+        _configs.push_back(server_config);
     }
+}
+
+/**
+ * @brief Parse value of config file content
+ *
+ */
+std::string Parser::_M_get_server_block(std::string& content) {
+    int    level = 0;
+    size_t i = 0;
+
+    content = ft::strip_space(content);
+    if (content.length() <= 0) {
+        return content;
+    }
+    if (content.find("server") != 0) {
+        std::cerr << "Error: invalid configuration" << std::endl;
+    }
+    content = ft::strip_space(content.substr(6));
+    if (content.find('{') != 0) {
+        std::cerr << "Error: invalid configuration" << std::endl;
+    }
+
+    content = content.substr(1);
+    level++;
+
+    while (level > 0 && i < content.length()) {
+        if (content[i] == '{') level++;
+        if (content[i++] == '}') level--;
+    }
+    if (level != 0) {
+        std::cerr << "Error: invalid configuration" << std::endl;
+    }
+
+    std::string block = content.substr(0, i - 2);
+    content = content.substr(i);
+    return block;
+}
+
+/**
+ * @brief Create ServerConfig object from server configuration string
+ *
+ */
+Config Parser::_M_parse_server_block(std::string& config) {
+    std::cout << "Config parsing: " << config << std::endl;
+    return Config(80, "test");
+}
+
+/**
+ * @brief Return list of configs parsed from file
+ *
+ * @return std::vector<Config>
+ */
+std::vector<Config> Parser::getConfigs() {
+    return _configs;
 }
