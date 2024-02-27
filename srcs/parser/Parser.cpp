@@ -110,7 +110,7 @@ void Parser::_M_parse() {
 
     // Get server blocks
     std::string content = _contents;
-    while (content != "") {
+    while (ft::strip_space(content) != "") {
         std::string block = _M_get_server_block(content);
         Config      server_config = _M_parse_server_block(block);
         _configs.push_back(server_config);
@@ -145,7 +145,7 @@ std::string Parser::_M_get_server_block(std::string& content) {
         if (content[i++] == '}') level--;
     }
     if (level != 0) {
-        std::cerr << "Error: invalid configuration" << std::endl;
+        _M_throw_invalid_config();
     }
 
     std::string block = content.substr(0, i - 2);
@@ -153,13 +153,69 @@ std::string Parser::_M_get_server_block(std::string& content) {
     return block;
 }
 
+std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block(
+    std::string& config) {
+    size_t current_start = 0;
+    size_t cur = 0;
+    int    nested_level = 0;
+
+    std::vector<std::pair<std::string, std::string> > config_map;
+    while (cur < config.length()) {
+        if (config[cur] == '{')
+            nested_level++;
+        else if (config[cur] == '}')
+            nested_level--;
+
+        if (nested_level == 0 && (config[cur] == ';' || config[cur] == '}')) {
+            std::cout << config.substr(current_start, cur - current_start) << std::endl;
+            std::pair<std::string, std::string> entry =
+                ft::split_config(config.substr(current_start, cur - current_start + 1));
+            config_map.push_back(entry);
+            current_start = cur + 1;
+        }
+        cur++;
+    }
+    if (current_start < config.length() &&
+        ft::strip_space(config.substr(current_start + 1)).length() > 0) {
+        _M_throw_invalid_config();
+    }
+    return config_map;
+}
+
 /**
  * @brief Create ServerConfig object from server configuration string
  *
  */
 Config Parser::_M_parse_server_block(std::string& config) {
-    std::cout << "Config parsing: " << config << std::endl;
-    return Config(80, "test");
+    std::string              host;
+    std::vector<std::string> route_configs;
+    int                      port = -1;
+
+    std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
+    for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
+         it != config_map.end(); it++) {
+        if (it->first == "listen") {
+            port = atoi(&(it->second[0]));
+        } else if (it->first == "server_name") {
+            host = it->second;
+        } else if (it->first == "location") {
+            route_configs.push_back(it->second);
+        }
+    }
+
+    Config rtn(port, host);
+
+    std::map<std::string, Route> routes;
+
+    return rtn;
+}
+
+/**
+ * @brief Utils method to throw exception on error parsing configuration file
+ *
+ */
+void Parser::_M_throw_invalid_config() {
+    throw std::invalid_argument("invalid configuration file");
 }
 
 /**

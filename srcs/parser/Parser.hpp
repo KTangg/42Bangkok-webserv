@@ -14,6 +14,7 @@
 #define __PARSER_HPP__
 
 #include <cctype>
+#include <exception>
 #include <fstream>
 #include <map>
 #include <string>
@@ -21,6 +22,7 @@
 
 #include "config/Config.hpp"
 #include "logger/Logger.hpp"
+#include "route/Route.hpp"
 #include "utils/utils.hpp"
 
 class Parser {
@@ -41,9 +43,11 @@ class Parser {
 
     void _S_check_file(std::ifstream& file);
 
-    void        _M_parse();
-    std::string _M_get_server_block(std::string& content);
-    Config      _M_parse_server_block(std::string& config);
+    void                                              _M_parse();
+    std::string                                       _M_get_server_block(std::string& content);
+    std::vector<std::pair<std::string, std::string> > _M_parse_generic_block(std::string& config);
+    Config                                            _M_parse_server_block(std::string& config);
+    void                                              _M_throw_invalid_config();
 };
 
 #endif /* __PARSER_HPP__ */
