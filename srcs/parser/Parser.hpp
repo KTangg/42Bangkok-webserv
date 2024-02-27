@@ -47,6 +47,7 @@ class Parser {
     std::string                                       _M_get_server_block(std::string& content);
     std::vector<std::pair<std::string, std::string> > _M_parse_generic_block(std::string& config);
     Config                                            _M_parse_server_block(std::string& config);
+    Route                                             _M_parse_route_block(std::string& config);
     void                                              _M_throw_invalid_config();
 };
 

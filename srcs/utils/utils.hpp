@@ -14,8 +14,10 @@
 #define __UTILS_HPP__
 
 #include <exception>
+#include <iostream>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 namespace ft {
     template <typename T>
@@ -28,6 +30,7 @@ namespace ft {
 
     std::string                         strip_space(std::string value);
     std::pair<std::string, std::string> split_config(std::string value);
+    std::vector<std::string>            split(std::string value);
 
 }  // namespace ft
 

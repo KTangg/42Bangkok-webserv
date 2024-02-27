@@ -167,9 +167,8 @@ std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block
             nested_level--;
 
         if (nested_level == 0 && (config[cur] == ';' || config[cur] == '}')) {
-            std::cout << config.substr(current_start, cur - current_start) << std::endl;
             std::pair<std::string, std::string> entry =
-                ft::split_config(config.substr(current_start, cur - current_start + 1));
+                ft::split_config(config.substr(current_start, cur - current_start));
             config_map.push_back(entry);
             current_start = cur + 1;
         }
@@ -187,9 +186,12 @@ std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block
  *
  */
 Config Parser::_M_parse_server_block(std::string& config) {
-    std::string              host;
-    std::vector<std::string> route_configs;
-    int                      port = -1;
+    std::string                  host = "127.0.0.1";
+    std::string                  server_name_params;
+    std::vector<std::string>     route_configs;
+    std::map<std::string, Route> routes;
+    std::vector<ServerConfig>    server_configs;
+    int                          port = -1;
 
     std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
     for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
@@ -197,17 +199,50 @@ Config Parser::_M_parse_server_block(std::string& config) {
         if (it->first == "listen") {
             port = atoi(&(it->second[0]));
         } else if (it->first == "server_name") {
-            host = it->second;
+            server_name_params = it->second;
         } else if (it->first == "location") {
             route_configs.push_back(it->second);
+        } else if (it->first == "host") {
+            host = it->second;
         }
     }
 
     Config rtn(port, host);
 
-    std::map<std::string, Route> routes;
+    for (std::vector<std::string>::iterator it = route_configs.begin(); it != route_configs.end();
+         it++) {
+        Route       route = _M_parse_route_block(*it);
+        std::string path = route.get_path();
+        routes.insert(std::pair<std::string, Route>(path, route));
+    }
+
+    std::vector<std::string> server_names = ft::split(host);
+    for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
+         it++) {
+        rtn.add_server_config(ServerConfig(routes, *it));
+    }
 
     return rtn;
+}
+
+Route Parser::_M_parse_route_block(std::string& config) {
+    std::string  path = "";
+    std::string  root_directory = "";
+    const size_t end_pos = config.find('{');
+    if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
+
+    path = config.substr(0, end_pos - 1);
+    path = ft::strip_space(path);
+    std::string block = config.substr(end_pos + 1);
+
+    std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(block);
+    for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
+         it != config_map.end(); it++) {
+        if (it->first == "root") {
+            root_directory = it->second;
+        }
+    }
+    return Route(path, root_directory);
 }
 
 /**

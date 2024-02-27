@@ -10,10 +10,14 @@ int main(int argc, char** argv) {
         logger.log(Logger::ERROR, "Usage: ./webserv <config_file>");
         return 1;
     }
-    // Master master(argv[1]);
+    Master master(argv[1]);
 
-    // master.init();
-    // master.run();
-    Parser parser(argv[1]);
-    parser.parse();
+    try {
+        master.init();
+    } catch (const std::invalid_argument& err) {
+        std::cerr << "Error parsing configuration file: " << err.what() << std::endl;
+        std::cerr << "Aborting" << std::endl;
+        return 1;
+    }
+    master.run();
 }
