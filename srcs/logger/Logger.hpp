@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 17:36:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:46:55 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 15:10:10 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,14 +36,15 @@ class Logger {
     ~Logger();
 
     void log(LogLevel level, const std::string& message) const;
+    void setName(std::string name);
 
    private:
     Logger();
     Logger& operator=(const Logger& rhs);
 
-    const std::string _name;
-    const pid_t       _pid;
-    LogLevel          _level;
+    std::string _name;
+    const pid_t _pid;
+    LogLevel    _level;
     // std::ofstream _logFile;
     std::ostream* _log_stream;
     std::ostream* _log_error_stream;

@@ -6,7 +6,7 @@
 #    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2024/01/07 03:24:30 by spoolpra         ###   ########.fr        #
+#    Updated: 2024/02/25 16:22:06 by tratanat         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,7 +25,7 @@ SRCS =	main.cpp \
 		parser/Parser.cpp \
 		route/Route.cpp route/Cgi.cpp \
 		server/Master.cpp server/Worker.cpp server/Server.cpp server/Poller.cpp \
-		utils/status_code.cpp \
+		utils/status_code.cpp utils/utils.cpp \
 
 INCS = -I includes/ -I srcs/
 OBJS = $(SRCS:.cpp=.o)

@@ -12,6 +12,12 @@ int main(int argc, char** argv) {
     }
     Master master(argv[1]);
 
-    master.init();
+    try {
+        master.init();
+    } catch (const std::invalid_argument& err) {
+        std::cerr << "Error parsing configuration file: " << err.what() << std::endl;
+        std::cerr << "Aborting" << std::endl;
+        return 1;
+    }
     master.run();
 }

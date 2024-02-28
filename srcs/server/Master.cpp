@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 10:03:06 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:12:43 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 15:43:08 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,9 +87,9 @@ void Master::run() {
 void Master::_M_load_config() {
     Parser parser(_config_file_path);
     parser.parse();
+    std::vector<Config> configs = parser.getConfigs();
 
-    for (std::vector<Config>::const_iterator it = parser.get_configs().begin();
-         it != parser.get_configs().end(); ++it) {
+    for (std::vector<Config>::const_iterator it = configs.begin(); it != configs.end(); ++it) {
         _configs.push_back(*it);
     }
 

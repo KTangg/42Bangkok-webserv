@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 15:43:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 16:24:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,7 @@
  *
  * @param file_path the path to the config file
  */
-Parser::Parser(const std::string& file_path) {
-    _logger.setName("Parser");
-
+Parser::Parser(const std::string& file_path) : _logger("Parser") {
     // Check if file path available
     _M_check_file_path(file_path);
 
@@ -49,6 +47,7 @@ Parser::~Parser() {
  */
 void Parser::parse() {
     _logger.log(Logger::INFO, "Parsing config file");
+    _M_parse();
 }
 
 /**
@@ -106,11 +105,159 @@ void Parser::_S_check_file(std::ifstream& file) {
  *
  */
 void Parser::_M_parse() {
-    std::string  server_block;
-    ServerConfig server_config;
+    std::string server_block;
+    // ServerConfig server_config;
 
     // Get server blocks
-    while ((server_block = _M_get_server_block()) != "") {
-        server_config = _M_parse_server_block(server_block);
+    std::string content = _contents;
+    while (ft::strip_space(content) != "") {
+        std::string block = _M_get_server_block(content);
+        Config      server_config = _M_parse_server_block(block);
+        _configs.push_back(server_config);
     }
+}
+
+/**
+ * @brief Parse value of config file content
+ *
+ */
+std::string Parser::_M_get_server_block(std::string& content) {
+    int    level = 0;
+    size_t i = 0;
+
+    content = ft::strip_space(content);
+    if (content.length() <= 0) {
+        return content;
+    }
+    if (content.find("server") != 0) {
+        std::cerr << "Error: invalid configuration" << std::endl;
+    }
+    content = ft::strip_space(content.substr(6));
+    if (content.find('{') != 0) {
+        std::cerr << "Error: invalid configuration" << std::endl;
+    }
+
+    content = content.substr(1);
+    level++;
+
+    while (level > 0 && i < content.length()) {
+        if (content[i] == '{') level++;
+        if (content[i++] == '}') level--;
+    }
+    if (level != 0) {
+        _M_throw_invalid_config();
+    }
+
+    std::string block = content.substr(0, i - 2);
+    content = content.substr(i);
+    return block;
+}
+
+std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block(
+    std::string& config) {
+    size_t current_start = 0;
+    size_t cur = 0;
+    int    nested_level = 0;
+
+    std::vector<std::pair<std::string, std::string> > config_map;
+    while (cur < config.length()) {
+        if (config[cur] == '{')
+            nested_level++;
+        else if (config[cur] == '}')
+            nested_level--;
+
+        if (nested_level == 0 && (config[cur] == ';' || config[cur] == '}')) {
+            std::pair<std::string, std::string> entry =
+                ft::split_config(config.substr(current_start, cur - current_start));
+            config_map.push_back(entry);
+            current_start = cur + 1;
+        }
+        cur++;
+    }
+    if (current_start < config.length() &&
+        ft::strip_space(config.substr(current_start + 1)).length() > 0) {
+        _M_throw_invalid_config();
+    }
+    return config_map;
+}
+
+/**
+ * @brief Create ServerConfig object from server configuration string
+ *
+ */
+Config Parser::_M_parse_server_block(std::string& config) {
+    std::string                  host = "127.0.0.1";
+    std::string                  server_name_params;
+    std::vector<std::string>     route_configs;
+    std::map<std::string, Route> routes;
+    std::vector<ServerConfig>    server_configs;
+    int                          port = -1;
+
+    std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
+    for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
+         it != config_map.end(); it++) {
+        if (it->first == "listen") {
+            port = atoi(&(it->second[0]));
+        } else if (it->first == "server_name") {
+            server_name_params = it->second;
+        } else if (it->first == "location") {
+            route_configs.push_back(it->second);
+        } else if (it->first == "host") {
+            host = it->second;
+        }
+    }
+
+    Config rtn(port, host);
+
+    for (std::vector<std::string>::iterator it = route_configs.begin(); it != route_configs.end();
+         it++) {
+        Route       route = _M_parse_route_block(*it);
+        std::string path = route.get_path();
+        routes.insert(std::pair<std::string, Route>(path, route));
+    }
+
+    std::vector<std::string> server_names = ft::split(host);
+    for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
+         it++) {
+        rtn.add_server_config(ServerConfig(routes, *it));
+    }
+
+    return rtn;
+}
+
+Route Parser::_M_parse_route_block(std::string& config) {
+    std::string  path = "";
+    std::string  root_directory = "";
+    const size_t end_pos = config.find('{');
+    if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
+
+    path = config.substr(0, end_pos - 1);
+    path = ft::strip_space(path);
+    std::string block = config.substr(end_pos + 1);
+
+    std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(block);
+    for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
+         it != config_map.end(); it++) {
+        if (it->first == "root") {
+            root_directory = it->second;
+        }
+    }
+    return Route(path, root_directory);
+}
+
+/**
+ * @brief Utils method to throw exception on error parsing configuration file
+ *
+ */
+void Parser::_M_throw_invalid_config() {
+    throw std::invalid_argument("invalid configuration file");
+}
+
+/**
+ * @brief Return list of configs parsed from file
+ *
+ * @return std::vector<Config>
+ */
+std::vector<Config> Parser::getConfigs() {
+    return _configs;
 }

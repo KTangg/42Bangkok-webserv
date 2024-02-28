@@ -3,17 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 18:31:18 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/06 14:54:18 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/25 16:21:46 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __UTILS_HPP__
 #define __UTILS_HPP__
 
+#include <exception>
+#include <iostream>
 #include <sstream>
+#include <utility>
+#include <vector>
 
 namespace ft {
     template <typename T>
@@ -23,6 +27,11 @@ namespace ft {
 
         return os.str();
     }
+
+    std::string                         strip_space(std::string value);
+    std::pair<std::string, std::string> split_config(std::string value);
+    std::vector<std::string>            split(std::string value);
+
 }  // namespace ft
 
 #endif /* __UTILS_HPP__ */
