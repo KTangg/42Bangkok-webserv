@@ -216,7 +216,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
         routes.insert(std::pair<std::string, Route>(path, route));
     }
 
-    std::vector<std::string> server_names = ft::split(host);
+    std::vector<std::string> server_names = ft::split_whitespace(host);
     for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
          it++) {
         rtn.add_server_config(ServerConfig(routes, *it));

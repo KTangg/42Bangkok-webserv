@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:43:35 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/28 19:57:33 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,7 @@ void Worker::_M_run() {
 
     // Handle events
     for (poller_it_t it = _poller.get_fds_begin(); it != _poller.get_fds_end();) {
+        // std::cout << "revents: " << it->revents << std::endl;
         if (it->revents & POLLIN) {
             if (it->fd == _socket) {
                 it = _M_handle_new_connection(it);
@@ -208,6 +209,8 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     char buf[1024];
     int  ret = recv(it->fd, buf, 1024, 0);
 
+    // std::cout << "handling:\n" << buf << "\nEND OF MESSAGE\n\n" << std::endl;
+    HttpRequest::parse_request(buf, _logger);
     if (ret == -1) {
         _logger.log(Logger::ERROR, "Failed to receive data from client " + ft::to_string(it->fd));
         it->revents |= POLLERR;
@@ -228,9 +231,11 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
     // TODO handle server response
+    std::cout << "RESPONDING" << std::endl;
     std::string res = "HTTP/1.1 200 OK\r\n\r\nHello World!";
 
     int ret = send(it->fd, res.c_str(), res.size(), 0);
+    close(it->fd);
 
     if (ret == -1) {
         _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));

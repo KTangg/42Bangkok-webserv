@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/25 16:21:10 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/25 16:22:27 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/28 20:09:29 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ std::pair<std::string, std::string> ft::split_config(std::string value) {
     return rtn;
 }
 
-std::vector<std::string> ft::split(std::string value) {
+std::vector<std::string> ft::split_whitespace(std::string value) {
     size_t                   word_start = 0;
     size_t                   pos = 0;
     std::vector<std::string> list;
@@ -54,4 +54,36 @@ std::vector<std::string> ft::split(std::string value) {
     }
 
     return list;
+}
+
+std::vector<std::string> ft::split(std::string value, std::string delimiter, int limit) {
+    int                      split_count = 0;
+    size_t                   pos = 0;
+    std::vector<std::string> list;
+
+    while (value.length() > 0) {
+        pos = value.find(delimiter);
+        if (pos == std::string::npos) break;
+
+        std::string member = value.substr(0, pos);
+        list.push_back(ft::strip_space(member));
+        split_count++;
+
+        if (pos == value.length()) break;
+        value = value.substr(pos + 1);
+
+        if (limit > 0 && split_count >= limit) {
+            std::string remainder = ft::strip_space(value);
+            if (remainder.length() > 0) list.push_back(remainder);
+        };
+    }
+
+    return list;
+}
+
+std::string ft::string_lower(std::string str) {
+    for (std::string::iterator it = str.begin(); it != str.end(); it++) {
+        *it = tolower(*it);
+    }
+    return str;
 }

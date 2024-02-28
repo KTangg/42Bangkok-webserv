@@ -25,6 +25,7 @@ SRCS =	main.cpp \
 		parser/Parser.cpp \
 		route/Route.cpp route/Cgi.cpp \
 		server/Master.cpp server/Worker.cpp server/Server.cpp server/Poller.cpp \
+		http/HttpRequest.cpp \
 		utils/status_code.cpp utils/utils.cpp \
 
 INCS = -I includes/ -I srcs/
