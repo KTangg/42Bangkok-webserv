@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 09:27:00 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:12:14 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -256,9 +256,8 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
 void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
-    // TODO handle server response
-    std::string res =
-        "HTTP/1.1 200 OK\r\nContent-Length: 12\r\nContent-Type: text/plain\r\n\r\nHello World!";
+    HttpResponse response(200, "Testing Response with plain text");
+    std::string  res = response.get_raw_message();
 
     while (_request_queue[it->fd].size() > 0) {
         HttpRequest* req = _request_queue[it->fd].front();

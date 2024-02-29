@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 09:24:12 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:12:01 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     int                      content_length = 0;
     std::string              content;
 
-    pos = msg.find("\r\n");
+    pos = msg.find(CRLF);
     if (pos == std::string::npos) {
         HttpRequest *request = new HttpRequest(logger, method, path, host, connection,
                                                content_length, content_type, content);
@@ -60,7 +60,7 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     if (pos < msg.length()) msg = msg.substr(pos + 1);
 
     while (msg.length() > 0) {
-        pos = msg.find("\r\n");
+        pos = msg.find(CRLF);
         if (pos <= 1) {
             if (content_length > 0) {
                 content = msg.substr(1, content_length + 2);

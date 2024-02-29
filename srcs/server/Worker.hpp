@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/28 21:06:00 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:02:25 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 
 #include "config/Config.hpp"
 #include "http/HttpRequest.hpp"
+#include "http/HttpResponse.hpp"
 #include "logger/Logger.hpp"
 #include "server/Poller.hpp"
 #include "server/Server.hpp"
