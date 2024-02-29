@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 09:10:43 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 09:27:00 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,9 +231,14 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(ret) + " bytes from client " +
                                        ft::to_string(it->fd));
     }
-    // TODO handle client request
 
-    HttpRequest* request = HttpRequest::parse_request(buf, _logger);
+    HttpRequest* request;
+    try {
+        request = HttpRequest::parse_request(buf, _logger);
+    } catch (ft::InvalidHttpRequest& e) {
+        _logger.log(Logger::ERROR, e.what());
+        return;
+    }
 
     if (_request_queue.count(it->fd) == 0) {
         std::queue<HttpRequest*> new_queue;

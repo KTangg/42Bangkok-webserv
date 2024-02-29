@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/28 21:02:53 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 09:23:35 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "logger/Logger.hpp"
+#include "utils/exception.hpp"
 #include "utils/utils.hpp"
 
 class HttpRequest {

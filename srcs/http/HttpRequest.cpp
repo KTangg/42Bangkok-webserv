@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/28 21:40:28 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 09:24:12 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,42 +38,40 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     std::string              msg(raw_msg);
     std::vector<std::string> fields;
     size_t                   pos;
-    std::string              method;
+    std::string              method = "GET";
     std::string              path = "/";
     std::string              host;
-    std::string              connection;
+    std::string              connection = "close";
     std::string              content_type = "application/octet-stream";
     int                      content_length = 0;
     std::string              content;
 
     pos = msg.find("\r\n");
     if (pos == std::string::npos) {
-        // TODO: throw something
+        HttpRequest *request = new HttpRequest(logger, method, path, host, connection,
+                                               content_length, content_type, content);
+        return request;
     }
     std::string              path_string = msg.substr(0, pos);
     std::vector<std::string> path_params = ft::split(path_string, " ", 2);
-    if (path_params.size() <= 0) {
-        // TODO: throw something
-    }
-    method = path_params[0];
-    if (path_params.size() >= 2) {
-        path = path_params[1];
-    }
+    if (path_params.size() >= 1) method = path_params[0];
+    if (path_params.size() >= 2) path = path_params[1];
 
-    msg = msg.substr(pos + 1);
+    if (pos < msg.length()) msg = msg.substr(pos + 1);
 
     while (msg.length() > 0) {
         pos = msg.find("\r\n");
         if (pos <= 1) {
             if (content_length > 0) {
                 content = msg.substr(1, content_length + 2);
+                // TODO: Handle if message cannot be read all at once
             }
             break;
         }
         std::string              line = msg.substr(0, pos);
         std::vector<std::string> split = ft::split(line, ":", 1);
         if (split.size() < 2) {
-            // TODO: throw invalid headers
+            throw ft::InvalidHttpRequest("Malformed headers: " + line);
         }
         std::string header_name = ft::string_lower(split[0]);
 
