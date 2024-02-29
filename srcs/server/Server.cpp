@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 20:14:25 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 20:31:42 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,11 +99,12 @@ HttpResponse* Server::serve_static_files(const std::string& path, HttpRequest& r
     std::ostringstream oss;
     oss << file.rdbuf();
     std::string content = oss.str();
-    std::string content_type = "text/plain";
+    std::string content_type = DEFAULT_MIME_TYPE;
 
-    // TODO: Refactor mime types
-    if (path.rfind(".html") == path.length() - 5) {
-        content_type = "text/html";
+    std::string extension = path.substr(path.find_last_of("."));
+    std::map<std::string, std::string>::const_iterator mime_type = ft::mime_types.find(extension);
+    if (mime_type != ft::mime_types.end()) {
+        content_type = mime_type->second;
     }
 
     return new HttpResponse(200, req.get_connection(), "", content_type, content);

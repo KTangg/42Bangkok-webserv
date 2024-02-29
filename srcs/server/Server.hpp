@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:41:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 19:17:54 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 20:26:56 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "http/HttpRequest.hpp"
+#include "utils/mime_types.hpp"
 
 class Server {
    public:
