@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/25 16:24:09 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 19:38:23 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,6 +191,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
     std::vector<std::string>     route_configs;
     std::map<std::string, Route> routes;
     std::vector<ServerConfig>    server_configs;
+    std::string                  root;
     int                          port = -1;
 
     std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
@@ -204,6 +205,8 @@ Config Parser::_M_parse_server_block(std::string& config) {
             route_configs.push_back(it->second);
         } else if (it->first == "host") {
             host = it->second;
+        } else if (it->first == "root") {
+            root = it->second;
         }
     }
 
@@ -211,7 +214,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
 
     for (std::vector<std::string>::iterator it = route_configs.begin(); it != route_configs.end();
          it++) {
-        Route       route = _M_parse_route_block(*it);
+        Route       route = _M_parse_route_block(*it, root);
         std::string path = route.get_path();
         routes.insert(std::pair<std::string, Route>(path, route));
     }
@@ -225,7 +228,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
     return rtn;
 }
 
-Route Parser::_M_parse_route_block(std::string& config) {
+Route Parser::_M_parse_route_block(std::string& config, std::string root) {
     std::string  path = "";
     std::string  root_directory = "";
     const size_t end_pos = config.find('{');
@@ -242,6 +245,7 @@ Route Parser::_M_parse_route_block(std::string& config) {
             root_directory = it->second;
         }
     }
+    if (root_directory.empty()) root_directory = root;
     return Route(path, root_directory);
 }
 

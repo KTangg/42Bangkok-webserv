@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 13:25:45 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 19:35:57 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,23 @@ HttpResponse::HttpResponse(int status_code, const std::string& response_text)
     _content_length = response_text.length();
     set_date();
 }
+HttpResponse::HttpResponse(int                status_code,
+                           const std::string& connection,
+                           const std::string& keep_alive,
+                           const std::string& content_type,
+                           const std::string& content)
+    : _status_code(status_code),
+      _server("webserv/1.0.0"),
+      _connection(connection),
+      _keep_alive(keep_alive),
+      _content_type(content_type),
+      _content(content) {
+    _content_length = content.length();
+    set_date();
+}
+
+HttpResponse::~HttpResponse() {
+}
 
 /**
  * @brief Initialize date of Http Response object in IMF-fixdate format:
@@ -57,11 +74,18 @@ void HttpResponse::set_date() {
  */
 std::string HttpResponse::get_raw_message() {
     std::stringstream msg;
-    msg << "HTTP/1.1 " << _status_code << " OK" << CRLF;
+
+    // Get status message from status code
+    std::string                                status_msg = "Unknown";
+    std::map<int, std::string>::const_iterator pos = ft::http_status_codes.find(_status_code);
+    if (pos != ft::http_status_codes.end()) status_msg = pos->second;
+
+    msg << "HTTP/1.1 " << _status_code << " " << status_msg << CRLF;
     msg << "Date: " << _date << CRLF;
     msg << "Server: " << _server << CRLF;
     msg << "Connection: " << _connection << CRLF;
-    if (_keep_alive.length() > 0) msg << "Keep-Alive: " << _keep_alive << CRLF;
+    if (_connection == "keep-alive" && _keep_alive.length() > 0)
+        msg << "Keep-Alive: " << _keep_alive << CRLF;
     if (_content.length() > 0) msg << "Content-Type: " << _content_type << CRLF;
     if (_content_length > 0) msg << "Content-Length: " << _content_length << CRLF;
     msg << CRLF;

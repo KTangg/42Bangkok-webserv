@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 09:36:06 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 13:10:35 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 19:36:05 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,14 +14,22 @@
 #define __HTTP_RESPONSE_HPP__
 
 #include <ctime>
+#include <iostream>
 #include <sstream>
 #include <string>
 
 #include "constants.hpp"
+#include "utils/status_code.hpp"
 
 class HttpResponse {
    public:
     HttpResponse(int status_code, const std::string& response_text);
+    HttpResponse(int                status_code,
+                 const std::string& connection,
+                 const std::string& keep_alive,
+                 const std::string& content_type,
+                 const std::string& content);
+    ~HttpResponse();
     std::string get_raw_message();
 
    private:

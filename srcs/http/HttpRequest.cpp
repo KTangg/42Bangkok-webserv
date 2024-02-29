@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 13:27:57 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 18:55:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,38 @@ HttpRequest::HttpRequest(const Logger      &logger,
       _connection(connection),
       _content_length(content_length),
       _content_type(content_type),
-      _content(content) {
+      _content(content),
+      _response(0) {
     _logger.log(Logger::INFO, "Received HTTP Request: " + _method + " " + _path);
-    _logger.log(Logger::DEBUG, "\tHost: " + _host + " Connection: " + _connection);
-    _logger.log(Logger::DEBUG, "\tContent-Type: " + _content_type);
-    _logger.log(Logger::DEBUG, "\tContent: " + _content);
+    _logger.log(Logger::INFO, "\tHost: " + _host + " Connection: " + _connection);
+    _logger.log(Logger::INFO, "\tContent-Type: " + _content_type);
+    _logger.log(Logger::INFO, "\tContent: " + _content);
+}
+
+HttpRequest::~HttpRequest() {
+    if (_response) {
+        delete _response;
+    }
+}
+
+const std::string &HttpRequest::get_host() const {
+    return _host;
+}
+
+const std::string &HttpRequest::get_path() const {
+    return _path;
+}
+
+const std::string &HttpRequest::get_connection() const {
+    return _connection;
+}
+
+HttpResponse *HttpRequest::get_response() const {
+    return _response;
+}
+
+void HttpRequest::set_response(HttpResponse *res) {
+    _response = res;
 }
 
 /**
@@ -86,6 +113,8 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
             content_type = split[1];
         } else if (header_name == "host") {
             host = split[1];
+            size_t port_pos = host.find(":");
+            if (port_pos != std::string::npos) host = host.substr(0, port_pos);
         } else if (header_name == "connection") {
             connection = split[1];
         } else if (header_name == "content-length") {

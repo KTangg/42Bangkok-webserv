@@ -6,7 +6,7 @@
 /*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:08:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/02/29 19:37:24 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,11 +101,26 @@ const ErrorPage& ServerConfig::get_error_page(int code) const {
  * @return const Route& The route.
  */
 const Route& ServerConfig::get_route(const std::string& path) const {
-    std::map<std::string, Route>::const_iterator it = _routes.find(path);
+    std::map<std::string, Route>::const_iterator dest = _routes.end();
 
-    if (it == _routes.end()) {
+    for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end();
+         it++) {
+        size_t route_length = 0;
+        if (it->first.length() == 0 || path.length() == 0) continue;
+        std::cout << path.rfind(it->first, 0) << std::endl;
+
+        // Searching for matching route prefix
+        if (path.rfind(it->first, 0) == 0) {
+            if (it->first.length() > route_length) {
+                route_length = it->first.length();
+                dest = it;
+            }
+        }
+    }
+
+    if (dest == _routes.end()) {
         throw std::out_of_range("Route not found");
     }
 
-    return it->second;
+    return dest->second;
 }

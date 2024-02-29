@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 13:36:57 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 19:40:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,7 +231,8 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
                                        ft::to_string(it->fd));
     }
 
-    HttpRequest* request;
+    // Create request abstraction
+    HttpRequest* request = 0;
     try {
         request = HttpRequest::parse_request(buf, _logger);
     } catch (ft::InvalidHttpRequest& e) {
@@ -246,6 +247,29 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     } else {
         _request_queue[it->fd].push(request);
     }
+
+    Server& server = _M_route_server(*request);
+    server.serve_request(*request);
+}
+
+/**
+ * @brief Route a request to the proper server.
+ * If no exact match, will return the first server.
+ *
+ * @param req HttpRequest
+ * @return Server& Server that matches the request
+ */
+Server& Worker::_M_route_server(HttpRequest& req) {
+    Server* server = 0;
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++) {
+        if (it->match_name(req.get_host())) {
+            server = &(*it);
+        }
+    }
+    if (!server) {
+        server = &(_servers.front());
+    }
+    return *server;
 }
 
 /**
@@ -259,11 +283,16 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     std::string  res = response.get_raw_message();
 
     while (_request_queue[it->fd].size() > 0) {
-        HttpRequest* req = _request_queue[it->fd].front();
+        HttpRequest*  req = _request_queue[it->fd].front();
+        HttpResponse* res = req->get_response();
+        std::string   response_msg = res->get_raw_message();
+
+        if (!res) continue;
+
         _request_queue[it->fd].pop();
         delete req;
 
-        int ret = send(it->fd, res.c_str(), res.size(), 0);
+        int ret = send(it->fd, response_msg.c_str(), response_msg.size(), 0);
 
         if (ret == -1) {
             _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
