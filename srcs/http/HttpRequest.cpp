@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/28 20:29:05 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/28 21:40:28 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ HttpRequest::HttpRequest(const Logger      &logger,
     _logger.log(Logger::DEBUG, "\tContent: " + _content);
 }
 
-HttpRequest HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
+HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     std::string              msg(raw_msg);
     std::vector<std::string> fields;
     size_t                   pos;
@@ -65,7 +65,6 @@ HttpRequest HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     while (msg.length() > 0) {
         pos = msg.find("\r\n");
         if (pos <= 1) {
-            std::cout << "length: " << content_length << std::endl;
             if (content_length > 0) {
                 content = msg.substr(1, content_length + 2);
             }
@@ -94,6 +93,7 @@ HttpRequest HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
         msg = msg.substr(pos + 1);
     }
 
-    return HttpRequest(logger, method, path, host, connection, content_length, content_type,
-                       content);
+    HttpRequest *request = new HttpRequest(logger, method, path, host, connection, content_length,
+                                           content_type, content);
+    return request;
 }

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/28 18:38:45 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/28 21:06:00 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,9 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/socket.h>
+
+#include <map>
+#include <queue>
 
 #include "config/Config.hpp"
 #include "http/HttpRequest.hpp"
@@ -40,10 +43,11 @@ class Worker {
    private:
     Worker();
 
-    const Logger  _logger;
-    int           _socket;
-    Poller        _poller;
-    const Master& _master;
+    const Logger                             _logger;
+    int                                      _socket;
+    Poller                                   _poller;
+    const Master&                            _master;
+    std::map<int, std::queue<HttpRequest*> > _request_queue;
 
     sockaddr_in_t       _addr;
     std::vector<Server> _servers;

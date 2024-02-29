@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/28 19:57:55 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/28 21:02:53 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ class HttpRequest {
                 const int          content_length,
                 const std::string &content_type,
                 const std::string &content);
-    static HttpRequest parse_request(char *raw_msg, const Logger &logger);
+    static HttpRequest *parse_request(char *raw_msg, const Logger &logger);
 
    private:
     HttpRequest();

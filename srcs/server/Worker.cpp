@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/28 19:57:33 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 09:10:43 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,14 @@ Worker::Worker(const Config& config, const Master& master)
  *
  */
 Worker::~Worker() {
+    for (std::map<int, std::queue<HttpRequest*> >::iterator it = _request_queue.begin();
+         it != _request_queue.end(); it++) {
+        while ((*it).second.size() > 0) {
+            HttpRequest* cur = (*it).second.front();
+            (*it).second.pop();
+            delete cur;
+        }
+    }
 }
 
 /**
@@ -76,7 +84,7 @@ void Worker::_M_run() {
             } else {
                 _M_handle_client_request(it);
             }
-        } else if (it->revents & POLLOUT) {
+        } else if (it->revents & POLLOUT && _request_queue[it->fd].size() > 0) {
             _M_handle_server_response(it);
         }
 
@@ -195,6 +203,11 @@ poller_it_t Worker::_M_handle_client_disconnection(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Client " + ft::to_string(it->fd) + " disconnected");
 
     close(it->fd);
+    while (_request_queue[it->fd].size() > 0) {
+        HttpRequest* req = _request_queue[it->fd].front();
+        _request_queue[it->fd].pop();
+        delete req;
+    }
 
     return _poller.remove_fd(it);
 }
@@ -209,8 +222,6 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     char buf[1024];
     int  ret = recv(it->fd, buf, 1024, 0);
 
-    // std::cout << "handling:\n" << buf << "\nEND OF MESSAGE\n\n" << std::endl;
-    HttpRequest::parse_request(buf, _logger);
     if (ret == -1) {
         _logger.log(Logger::ERROR, "Failed to receive data from client " + ft::to_string(it->fd));
         it->revents |= POLLERR;
@@ -221,6 +232,16 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
                                        ft::to_string(it->fd));
     }
     // TODO handle client request
+
+    HttpRequest* request = HttpRequest::parse_request(buf, _logger);
+
+    if (_request_queue.count(it->fd) == 0) {
+        std::queue<HttpRequest*> new_queue;
+        new_queue.push(request);
+        _request_queue.insert(std::pair<int, std::queue<HttpRequest*> >(it->fd, new_queue));
+    } else {
+        _request_queue[it->fd].push(request);
+    }
 }
 
 /**
@@ -231,18 +252,23 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
     // TODO handle server response
-    std::cout << "RESPONDING" << std::endl;
-    std::string res = "HTTP/1.1 200 OK\r\n\r\nHello World!";
+    std::string res =
+        "HTTP/1.1 200 OK\r\nContent-Length: 12\r\nContent-Type: text/plain\r\n\r\nHello World!";
 
-    int ret = send(it->fd, res.c_str(), res.size(), 0);
-    close(it->fd);
+    while (_request_queue[it->fd].size() > 0) {
+        HttpRequest* req = _request_queue[it->fd].front();
+        _request_queue[it->fd].pop();
+        delete req;
 
-    if (ret == -1) {
-        _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
-        it->revents |= POLLERR;
-    } else {
-        _logger.log(Logger::DEBUG,
-                    "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
+        int ret = send(it->fd, res.c_str(), res.size(), 0);
+
+        if (ret == -1) {
+            _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
+            it->revents |= POLLERR;
+        } else {
+            _logger.log(Logger::DEBUG,
+                        "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
+        }
     }
 }
 
