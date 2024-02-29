@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 13:12:01 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:27:57 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ HttpRequest::HttpRequest(const Logger      &logger,
                          const std::string &host,
                          const std::string &connection,
                          const int          content_length = -1,
-                         const std::string &content_type = "application/octet-stream",
+                         const std::string &content_type = "text/plain",
                          const std::string &content = "")
     : _logger(logger),
       _method(method),
@@ -34,6 +34,13 @@ HttpRequest::HttpRequest(const Logger      &logger,
     _logger.log(Logger::DEBUG, "\tContent: " + _content);
 }
 
+/**
+ * @brief Parse raw HTTP request and returns an HttpRequest object
+ *
+ * @param raw_msg Raw HTTP request message
+ * @param logger Parent's logger
+ * @return HttpRequest* Request object
+ */
 HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
     std::string              msg(raw_msg);
     std::vector<std::string> fields;

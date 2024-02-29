@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 13:14:57 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:25:45 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,12 @@ HttpResponse::HttpResponse()
     set_date();
 }
 
+/**
+ * @brief Construct a new HttpResponse object from a string
+ *
+ * @param status_code HTTP status code
+ * @param response_text Text content to be sent
+ */
 HttpResponse::HttpResponse(int status_code, const std::string& response_text)
     : _status_code(status_code),
       _server("webserv/1.0.0"),
@@ -30,6 +36,11 @@ HttpResponse::HttpResponse(int status_code, const std::string& response_text)
     set_date();
 }
 
+/**
+ * @brief Initialize date of Http Response object in IMF-fixdate format:
+ *        https://www.rfc-editor.org/rfc/rfc7231#section-7.1.1.1
+ *
+ */
 void HttpResponse::set_date() {
     char      buf[1000];
     time_t    now = time(0);
@@ -39,6 +50,11 @@ void HttpResponse::set_date() {
     _date = buf;
 }
 
+/**
+ * @brief Generate a string of HTTP response
+ *
+ * @return std::string
+ */
 std::string HttpResponse::get_raw_message() {
     std::stringstream msg;
     msg << "HTTP/1.1 " << _status_code << " OK" << CRLF;
