@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 13:12:14 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 13:36:57 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,6 @@ void Worker::_M_run() {
 
     // Handle events
     for (poller_it_t it = _poller.get_fds_begin(); it != _poller.get_fds_end();) {
-        // std::cout << "revents: " << it->revents << std::endl;
         if (it->revents & POLLIN) {
             if (it->fd == _socket) {
                 it = _M_handle_new_connection(it);
