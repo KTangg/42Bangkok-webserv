@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 09:24:03 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 11:53:30 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,9 +56,8 @@ class HttpRequest {
     const std::string _content_type;
     std::string       _content;
 
-    bool _is_completed;
-
     HttpResponse *_response;
+    bool          _is_completed;
 };
 
 #endif

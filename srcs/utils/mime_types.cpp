@@ -32,8 +32,11 @@ namespace ft {
         mime_types[".css"] = "text/css";
         mime_types[".csv"] = "text/csv";
         mime_types[".json"] = "application/json";
+        mime_types[".pdf"] = "application/pdf";
         mime_types[".mp4"] = "video/mp4";
         mime_types[".txt"] = "text/plain";
+        mime_types[".tar"] = "application/x-tar";
+        mime_types[".gz"] = "application/gzip";
         mime_types[".zip"] = "application/zip";
 
         return mime_types;

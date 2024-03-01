@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 09:31:41 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 11:45:58 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -242,15 +242,13 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     if (_request_queue[it->fd].size() > 0 && !_request_queue[it->fd].front()->is_completed()) {
         request = _request_queue[it->fd].front();
         request->append_content(std::string(buf, ret), ret);
-        if (request->is_completed()) {
-            ret = recv(it->fd, buf, 1024, 0);
-        }
     } else {
         try {
             request = HttpRequest::parse_request(buf, ret, _logger);
             _request_queue[it->fd].push(request);
         } catch (ft::InvalidHttpRequest& e) {
             _logger.log(Logger::ERROR, e.what());
+            _M_handle_client_disconnection(it);
             return;
         }
     }

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 09:23:46 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 11:52:58 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,12 +28,14 @@ HttpRequest::HttpRequest(const Logger      &logger,
       _content_length(content_length),
       _content_type(content_type),
       _content(content),
-      _response(0) {
-    if (size_t(_content_length) <= _content.length()) _is_completed = true;
+      _response(0),
+      _is_completed(false) {
+    if (content_length <= int(_content.length())) {
+        _is_completed = true;
+    }
     _logger.log(Logger::INFO, "Received HTTP Request: " + _method + " " + _path);
-    _logger.log(Logger::INFO, "\tHost: " + _host + " Connection: " + _connection);
-    _logger.log(Logger::INFO, "\tContent-Type: " + _content_type);
-    _logger.log(Logger::INFO, "\tContent: " + _content);
+    _logger.log(Logger::DEBUG, "\tHost: " + _host + " Connection: " + _connection);
+    _logger.log(Logger::DEBUG, "\tContent-Type: " + _content_type);
 }
 
 HttpRequest::~HttpRequest() {
@@ -103,9 +105,6 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, int len, const Logger &lo
     pos = msg.find(CRLF);
     if (pos == std::string::npos) {
         throw ft::InvalidHttpRequest("Malformed headers: 0");
-        // HttpRequest *request = new HttpRequest(logger, method, path, host, connection,
-        //                                        content_length, content_type, content);
-        // return request;
     }
     std::string              path_string = msg.substr(0, pos);
     std::vector<std::string> path_params = ft::split(path_string, " ", 2);
@@ -122,7 +121,6 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, int len, const Logger &lo
         if (pos == 0) {
             if (content_length > 0 && content_length < int(msg.length()) - len_offset) {
                 content = msg.substr(2, content_length);
-                // TODO: Handle if message cannot be read all at once
             } else {
                 content = msg.substr(2, int(msg.length()) - len_offset);
             }
