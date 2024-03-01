@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 09:36:06 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 23:09:33 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 00:01:23 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,13 @@ class HttpResponse {
                  const std::string& content_type,
                  const std::string& content);
     ~HttpResponse();
-    bool        is_ready();
-    std::string get_raw_message();
-    void        set_content_type(const std::string& content_type);
-    void        set_cgi(Cgi* cgi, const std::string& filepath);
+    bool               is_ready();
+    std::string        get_raw_message();
+    const std::string& get_redirection();
+    void               set_content_type(const std::string& content_type);
+    void               set_cgi(Cgi* cgi, const std::string& filepath);
+    void               set_redirection(std::string location);
+    void               set_connection(std::string connection);
 
    private:
     HttpResponse();
@@ -50,6 +53,7 @@ class HttpResponse {
     size_t      _content_length;
     std::string _content;
     Cgi*        _cgi;
+    std::string _redirection;
 };
 
 #endif

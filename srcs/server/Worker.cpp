@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 21:16:02 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 00:25:51 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,7 +297,26 @@ bool Worker::_M_validate_request(HttpRequest& req) {
     req.set_timeout(timeout);
 
     if (size_t(req.get_content_length()) > server.getConfig().get_max_body_size()) {
-        req.set_response(new HttpResponse(413, "Request Entity Too Large"));
+        HttpResponse* response = new HttpResponse(413, "Request Entity Too Large");
+        response->set_connection("close");
+        req.set_response(response);
+        return false;
+    }
+
+    try {
+        const Route& route = server.getConfig().get_route(req.get_path());
+        if (route.get_redirect_path().length() > 0) {
+            HttpResponse* response = new HttpResponse(301, "Moved Permanently");
+            response->set_redirection(route.get_redirect_path() +
+                                      req.get_path().substr(route.get_path().length()));
+            response->set_connection("close");
+            req.set_response(response);
+            return false;
+        }
+    } catch (std::out_of_range& e) {
+        HttpResponse* response = new HttpResponse(404, "Not Found");
+        response->set_connection("close");
+        req.set_response(response);
         return false;
     }
     return true;
@@ -316,6 +335,7 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
         if (req->check_timeout()) {
             req->set_response(new HttpResponse(408, "Connection Timed Out"));
             res = req->get_response();
+            res->set_connection("close");
             it->revents |= POLLHUP;
         }
         if (!res) break;

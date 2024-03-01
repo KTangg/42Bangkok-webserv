@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 23:13:16 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 00:19:41 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,21 @@ bool HttpResponse::is_ready() {
     return true;
 }
 
+const std::string& HttpResponse::get_redirection() {
+    return _redirection;
+}
+
+void HttpResponse::set_redirection(std::string location) {
+    _redirection = location;
+}
+
+void HttpResponse::set_connection(std::string connection) {
+    if (connection == "keep-alive" || connection == "close")
+        _connection = connection;
+    else
+        _connection = "keep-alive";
+}
+
 /**
  * @brief Generate a string of HTTP response
  *
@@ -129,6 +144,7 @@ std::string HttpResponse::get_raw_message() {
     if (pos != ft::http_status_codes.end()) status_msg = pos->second;
 
     msg << "HTTP/1.1 " << _status_code << " " << status_msg << CRLF;
+    if (_redirection.length() > 0) msg << "Location: " << _redirection << CRLF;
     msg << "Date: " << _date << CRLF;
     msg << "Server: " << _server << CRLF;
     msg << "Connection: " << _connection << CRLF;

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 23:28:57 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:36:28 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,7 @@ void Cgi::execute(const std::string& filepath) {
         dup2(_pipefd[1], 2);
         close(_pipefd[1]);
         execve(argv[0], argv, envp);
-        perror("execve failed");
+        perror("CGI failed");
         exit(EXIT_FAILURE);
     } else {
         close(_pipefd[1]);
