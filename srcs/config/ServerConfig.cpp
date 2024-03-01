@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 19:37:24 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/02/29 23:51:41 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,6 @@ const Route& ServerConfig::get_route(const std::string& path) const {
          it++) {
         size_t route_length = 0;
         if (it->first.length() == 0 || path.length() == 0) continue;
-        std::cout << path.rfind(it->first, 0) << std::endl;
 
         // Searching for matching route prefix
         if (path.rfind(it->first, 0) == 0) {

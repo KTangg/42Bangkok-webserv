@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 18:55:09 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:23:46 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ HttpRequest::HttpRequest(const Logger      &logger,
       _content_type(content_type),
       _content(content),
       _response(0) {
+    if (size_t(_content_length) <= _content.length()) _is_completed = true;
     _logger.log(Logger::INFO, "Received HTTP Request: " + _method + " " + _path);
     _logger.log(Logger::INFO, "\tHost: " + _host + " Connection: " + _connection);
     _logger.log(Logger::INFO, "\tContent-Type: " + _content_type);
@@ -53,8 +54,27 @@ const std::string &HttpRequest::get_connection() const {
     return _connection;
 }
 
+const std::string &HttpRequest::get_method() const {
+    return _method;
+}
+
+const std::string &HttpRequest::get_content() const {
+    return _content;
+}
+
 HttpResponse *HttpRequest::get_response() const {
     return _response;
+}
+
+bool HttpRequest::is_completed() const {
+    return _is_completed;
+}
+
+void HttpRequest::append_content(const std::string &content, int len) {
+    _content += content.substr(0, len);
+    if (_content.length() >= size_t(_content_length)) {
+        _is_completed = true;
+    }
 }
 
 void HttpRequest::set_response(HttpResponse *res) {
@@ -68,23 +88,24 @@ void HttpRequest::set_response(HttpResponse *res) {
  * @param logger Parent's logger
  * @return HttpRequest* Request object
  */
-HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
-    std::string              msg(raw_msg);
+HttpRequest *HttpRequest::parse_request(char *raw_msg, int len, const Logger &logger) {
+    std::string              msg(raw_msg, len);
     std::vector<std::string> fields;
     size_t                   pos;
-    std::string              method = "GET";
-    std::string              path = "/";
+    std::string              method;
+    std::string              path;
     std::string              host;
     std::string              connection = "close";
-    std::string              content_type = "application/octet-stream";
+    std::string              content_type;
     int                      content_length = 0;
     std::string              content;
 
     pos = msg.find(CRLF);
     if (pos == std::string::npos) {
-        HttpRequest *request = new HttpRequest(logger, method, path, host, connection,
-                                               content_length, content_type, content);
-        return request;
+        throw ft::InvalidHttpRequest("Malformed headers: 0");
+        // HttpRequest *request = new HttpRequest(logger, method, path, host, connection,
+        //                                        content_length, content_type, content);
+        // return request;
     }
     std::string              path_string = msg.substr(0, pos);
     std::vector<std::string> path_params = ft::split(path_string, " ", 2);
@@ -93,12 +114,17 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
 
     if (pos < msg.length()) msg = msg.substr(pos + 1);
 
+    int len_offset = 0;
+    if (len < int(msg.length())) len_offset = int(msg.length() - len);
+
     while (msg.length() > 0) {
         pos = msg.find(CRLF);
-        if (pos <= 1) {
-            if (content_length > 0) {
-                content = msg.substr(1, content_length + 2);
+        if (pos == 0) {
+            if (content_length > 0 && content_length < int(msg.length()) - len_offset) {
+                content = msg.substr(2, content_length);
                 // TODO: Handle if message cannot be read all at once
+            } else {
+                content = msg.substr(2, int(msg.length()) - len_offset);
             }
             break;
         }
@@ -124,7 +150,7 @@ HttpRequest *HttpRequest::parse_request(char *raw_msg, const Logger &logger) {
         }
 
         if (pos == msg.length()) break;
-        msg = msg.substr(pos + 1);
+        msg = msg.substr(pos + 2);
     }
 
     HttpRequest *request = new HttpRequest(logger, method, path, host, connection, content_length,

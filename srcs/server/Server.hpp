@@ -6,14 +6,17 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:41:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 20:26:56 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:35:53 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __SERVER_HPP__
 #define __SERVER_HPP__
 
+#include <sys/stat.h>
+
 #include <config/ServerConfig.hpp>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 
@@ -27,7 +30,13 @@ class Server {
 
     bool          match_name(const std::string& name) const;
     void          serve_request(HttpRequest& req);
+    HttpResponse* serve_get_response(std::string path, Route route, HttpRequest& req);
+    HttpResponse* serve_post_response(std::string path, Route route, HttpRequest& req);
+    HttpResponse* serve_delete_response(std::string path, Route route, HttpRequest& req);
+    HttpResponse* serve_201();
+    HttpResponse* serve_204();
     HttpResponse* serve_404();
+    HttpResponse* serve_405();
     HttpResponse* serve_500();
     HttpResponse* serve_static_files(const std::string& path, HttpRequest& req);
 

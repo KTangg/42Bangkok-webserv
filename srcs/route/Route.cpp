@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Route.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:44:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:05:48 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:26:14 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ namespace ft {
         std::vector<std::string> methods;
 
         methods.push_back("GET");
+        methods.push_back("POST");
+        methods.push_back("DELETE");
 
         return methods;
     }

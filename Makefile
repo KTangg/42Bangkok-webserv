@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+         #
+#    By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/14 23:19:02 by spoolpra          #+#    #+#              #
-#    Updated: 2024/02/29 13:00:10 by tratanat         ###   ########.fr        #
+#    Updated: 2024/02/29 20:29:57 by tratanat         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ SRCS =	main.cpp \
 		route/Route.cpp route/Cgi.cpp \
 		server/Master.cpp server/Worker.cpp server/Server.cpp server/Poller.cpp \
 		http/HttpRequest.cpp http/HttpResponse.cpp \
-		utils/status_code.cpp utils/utils.cpp \
+		utils/status_code.cpp utils/utils.cpp utils/mime_types.cpp \
 
 INCS = -I includes/ -I srcs/
 OBJS = $(SRCS:.cpp=.o)

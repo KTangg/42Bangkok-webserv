@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 18:54:55 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:24:03 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,12 @@ class HttpRequest {
     const std::string  &get_host() const;
     const std::string  &get_path() const;
     const std::string  &get_connection() const;
+    const std::string  &get_method() const;
+    const std::string  &get_content() const;
     HttpResponse       *get_response() const;
-    static HttpRequest *parse_request(char *raw_msg, const Logger &logger);
+    static HttpRequest *parse_request(char *raw_msg, int len, const Logger &logger);
+    void                append_content(const std::string &content, int len);
+    bool                is_completed() const;
 
     void set_response(HttpResponse *res);
 
@@ -50,7 +54,9 @@ class HttpRequest {
     const std::string _connection;
     const int         _content_length;
     const std::string _content_type;
-    const std::string _content;
+    std::string       _content;
+
+    bool _is_completed;
 
     HttpResponse *_response;
 };

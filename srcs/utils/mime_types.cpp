@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 20:20:07 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 20:33:31 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:31:29 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ namespace ft {
         mime_types[".jpeg"] = "image/jpeg";
         mime_types[".png"] = "image/png";
         mime_types[".svg"] = "image/svg";
+        mime_types[".webp"] = "image/webp";
         mime_types[".js"] = "text/javascript";
         mime_types[".css"] = "text/css";
         mime_types[".csv"] = "text/csv";

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 19:40:09 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 09:31:41 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,21 +231,32 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
                                        ft::to_string(it->fd));
     }
 
-    // Create request abstraction
-    HttpRequest* request = 0;
-    try {
-        request = HttpRequest::parse_request(buf, _logger);
-    } catch (ft::InvalidHttpRequest& e) {
-        _logger.log(Logger::ERROR, e.what());
-        return;
-    }
-
     if (_request_queue.count(it->fd) == 0) {
         std::queue<HttpRequest*> new_queue;
-        new_queue.push(request);
         _request_queue.insert(std::pair<int, std::queue<HttpRequest*> >(it->fd, new_queue));
+    }
+
+    // Create request abstraction
+    HttpRequest* request = 0;
+
+    if (_request_queue[it->fd].size() > 0 && !_request_queue[it->fd].front()->is_completed()) {
+        request = _request_queue[it->fd].front();
+        request->append_content(std::string(buf, ret), ret);
+        if (request->is_completed()) {
+            ret = recv(it->fd, buf, 1024, 0);
+        }
     } else {
-        _request_queue[it->fd].push(request);
+        try {
+            request = HttpRequest::parse_request(buf, ret, _logger);
+            _request_queue[it->fd].push(request);
+        } catch (ft::InvalidHttpRequest& e) {
+            _logger.log(Logger::ERROR, e.what());
+            return;
+        }
+    }
+
+    if (!request->is_completed()) {
+        return;
     }
 
     Server& server = _M_route_server(*request);
@@ -283,7 +294,8 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     std::string  res = response.get_raw_message();
 
     while (_request_queue[it->fd].size() > 0) {
-        HttpRequest*  req = _request_queue[it->fd].front();
+        HttpRequest* req = _request_queue[it->fd].front();
+        if (!req->is_completed()) continue;
         HttpResponse* res = req->get_response();
         std::string   response_msg = res->get_raw_message();
 
