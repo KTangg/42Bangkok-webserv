@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/25 16:21:10 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/28 20:09:29 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 21:13:21 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,4 +86,10 @@ std::string ft::string_lower(std::string str) {
         *it = tolower(*it);
     }
     return str;
+}
+
+std::string ft::get_extension(const std::string& path) {
+    size_t pos = path.find_last_of(".");
+    if (pos == std::string::npos) return "";
+    return path.substr(pos + 1);
 }

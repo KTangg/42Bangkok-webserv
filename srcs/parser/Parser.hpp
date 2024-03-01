@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 13:48:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 18:26:16 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:24:15 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@
 #include "logger/Logger.hpp"
 #include "route/Route.hpp"
 #include "utils/utils.hpp"
+
+#define DEFAULT_HOST "localhost"
+#define DEFAULT_TIMEOUT 60
 
 class Parser {
    public:

@@ -45,3 +45,4 @@ objs
 # Test file
 request_file/*
 *test*
+static/*

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 17:20:46 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:33:14 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,6 +115,19 @@ HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequ
             }
         }
     }
+
+    const std::string extension = ft::get_extension(path);
+    try {
+        Cgi           cgi = route.get_cgi(extension);
+        HttpResponse* response = new HttpResponse(200);
+        response->set_cgi(new Cgi(cgi), path);
+
+        std::string content_type = ft::get_mime_type(extension);
+        response->set_content_type(content_type);
+        return response;
+    } catch (std::runtime_error& e) {
+    }
+
     return serve_static_files(path, req);
 }
 
@@ -132,7 +145,7 @@ HttpResponse* Server::serve_post_response(std::string path, Route route, HttpReq
     if (path.end()[-1] == '/' || pos == std::string::npos) {
         throw std::out_of_range("File not found");
     }
-    std::string                                        extension = path.substr(pos);
+    std::string                                        extension = ft::get_extension(path);
     std::map<std::string, std::string>::const_iterator mime_type = ft::mime_types.find(extension);
     if (mime_type == ft::mime_types.end()) {
         throw std::out_of_range("File not found");
@@ -141,7 +154,6 @@ HttpResponse* Server::serve_post_response(std::string path, Route route, HttpReq
     if (pos == std::string::npos) {
         throw std::out_of_range("File not found");
     }
-    // std::string filename = path.substr(pos + 1);
     std::string filepath = path.substr(0, pos);
     struct stat info;
     if (stat(filepath.c_str(), &info) != 0) {
@@ -189,13 +201,7 @@ HttpResponse* Server::serve_static_files(const std::string& path, HttpRequest& r
     std::ostringstream oss;
     oss << file.rdbuf();
     std::string content = oss.str();
-    std::string content_type = DEFAULT_MIME_TYPE;
-
-    std::string extension = path.substr(path.find_last_of("."));
-    std::map<std::string, std::string>::const_iterator mime_type = ft::mime_types.find(extension);
-    if (mime_type != ft::mime_types.end()) {
-        content_type = mime_type->second;
-    }
+    std::string content_type = ft::get_mime_type(ft::get_extension(path));
 
     return new HttpResponse(200, req.get_connection(), "", content_type, content);
 }

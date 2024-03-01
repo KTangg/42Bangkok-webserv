@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 19:35:57 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:13:16 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,17 @@ HttpResponse::HttpResponse()
     : _status_code(200),
       _server("webserv/1.0.0"),
       _connection("close"),
-      _content_type("text/plain") {
+      _content_type("text/plain"),
+      _cgi(0) {
+    set_date();
+}
+
+HttpResponse::HttpResponse(int status_code)
+    : _status_code(status_code),
+      _server("webserv/1.0.0"),
+      _connection("close"),
+      _content_type("text/plain"),
+      _cgi(0) {
     set_date();
 }
 
@@ -31,7 +41,8 @@ HttpResponse::HttpResponse(int status_code, const std::string& response_text)
       _server("webserv/1.0.0"),
       _connection("keep-alive"),
       _content_type("text/plain"),
-      _content(response_text) {
+      _content(response_text),
+      _cgi(0) {
     _content_length = response_text.length();
     set_date();
 }
@@ -45,12 +56,14 @@ HttpResponse::HttpResponse(int                status_code,
       _connection(connection),
       _keep_alive(keep_alive),
       _content_type(content_type),
-      _content(content) {
+      _content(content),
+      _cgi(0) {
     _content_length = content.length();
     set_date();
 }
 
 HttpResponse::~HttpResponse() {
+    if (_cgi) delete _cgi;
 }
 
 /**
@@ -65,6 +78,41 @@ void HttpResponse::set_date() {
 
     strftime(buf, sizeof buf, "%a, %d %b %Y %H:%M:%S %Z", &tm);
     _date = buf;
+}
+
+/**
+ * @brief Set the Content-Type header of the response.
+ *
+ * @param content_type The MIME type to be set.
+ */
+void HttpResponse::set_content_type(const std::string& content_type) {
+    _content_type = content_type;
+}
+
+/**
+ * @brief Set CGI object and execute the CGI call
+ *
+ * @param cgi CGI object configured with path of CGI executable
+ * @param filepath Path of the CGI script
+ */
+void HttpResponse::set_cgi(Cgi* cgi, const std::string& filepath) {
+    _cgi = cgi;
+    _cgi->execute(filepath);
+}
+
+/**
+ * @brief Check whether the response is ready to be sent. If there's a CGI call, it will check
+ * the CGI object whether it has finished processing the request.
+ *
+ * @return true The response is ready to be sent.
+ * @return false The response is not ready.
+ */
+bool HttpResponse::is_ready() {
+    if (!_cgi) return true;
+    if (!_cgi->is_ready()) return false;
+    _content = _cgi->get_content();
+    _content_length = _content.length();
+    return true;
 }
 
 /**

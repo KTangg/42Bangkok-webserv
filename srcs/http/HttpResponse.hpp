@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 09:36:06 by tratanat          #+#    #+#             */
-/*   Updated: 2024/02/29 19:36:05 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:09:33 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,12 @@
 #include <string>
 
 #include "constants.hpp"
+#include "route/Cgi.hpp"
 #include "utils/status_code.hpp"
 
 class HttpResponse {
    public:
+    HttpResponse(int status_code);
     HttpResponse(int status_code, const std::string& response_text);
     HttpResponse(int                status_code,
                  const std::string& connection,
@@ -30,7 +32,10 @@ class HttpResponse {
                  const std::string& content_type,
                  const std::string& content);
     ~HttpResponse();
+    bool        is_ready();
     std::string get_raw_message();
+    void        set_content_type(const std::string& content_type);
+    void        set_cgi(Cgi* cgi, const std::string& filepath);
 
    private:
     HttpResponse();
@@ -44,6 +49,7 @@ class HttpResponse {
     std::string _content_type;
     size_t      _content_length;
     std::string _content;
+    Cgi*        _cgi;
 };
 
 #endif

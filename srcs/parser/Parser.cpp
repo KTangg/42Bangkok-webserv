@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 17:47:14 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:23:54 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,14 +186,14 @@ std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block
  *
  */
 Config Parser::_M_parse_server_block(std::string& config) {
-    std::string                  host = "127.0.0.1";
+    std::string                  host = DEFAULT_HOST;
     std::string                  server_name_params;
     std::vector<std::string>     route_configs;
     std::map<std::string, Route> routes;
     std::vector<ServerConfig>    server_configs;
     std::string                  root;
     int                          port = -1;
-    int                          timeout = 60;
+    int                          timeout = DEFAULT_TIMEOUT;
     size_t                       max_body_size = DEFAULT_MAX_BODY_SIZE;
     std::map<int, ErrorPage>     error_pages = ft::initialize_error_pages();
 
@@ -235,9 +235,25 @@ Config Parser::_M_parse_server_block(std::string& config) {
     return rtn;
 }
 
+/**
+ * @brief Parse location block inside the server config
+ *
+ * @param config The raw text of the location block
+ * @param root Root set in the server block if not overridden in location block
+ * @return Route
+ */
 Route Parser::_M_parse_route_block(std::string& config, std::string root) {
-    std::string  path = "";
-    std::string  root_directory = "";
+    std::string                path = "";
+    std::string                root_directory = "";
+    std::vector<std::string>   methods = ft::initialize_methods();
+    std::string                redirect_path = "";
+    bool                       directory_listing = false;
+    std::vector<std::string>   index_files = ft::initialize_index_files();
+    std::string                upload_directory = "";
+    std::map<std::string, Cgi> cgi_extensions = std::map<std::string, Cgi>();
+
+    cgi_extensions.insert(std::pair<std::string, Cgi>("php", Cgi("php-cgi", "php")));
+
     const size_t end_pos = config.find('{');
     if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
 
@@ -250,10 +266,26 @@ Route Parser::_M_parse_route_block(std::string& config, std::string root) {
          it != config_map.end(); it++) {
         if (it->first == "root") {
             root_directory = it->second;
+        } else if (it->first == "index") {
+            index_files = ft::split_whitespace(it->second);
+        } else if (it->first == "methods") {
+            methods = ft::split_whitespace(it->second);
+        } else if (it->first == "redirect_path") {
+            redirect_path = it->second;
+        } else if (it->first == "upload_directory") {
+            upload_directory = it->second;
+        } else if (it->first == "directory_listing") {
+            directory_listing = it->second == "on";
+        } else if (it->first == "cgi") {
+            std::vector<std::string> cgi_values = ft::split_whitespace(it->second);
+            if (cgi_values.size() != 2) _M_throw_invalid_config();
+            cgi_extensions.insert(
+                std::pair<std::string, Cgi>(cgi_values[0], Cgi(cgi_values[1], cgi_values[0])));
         }
     }
     if (root_directory.empty()) root_directory = root;
-    return Route(path, root_directory);
+    return Route(path, root_directory, methods, redirect_path, directory_listing, index_files,
+                 upload_directory, cgi_extensions);
 }
 
 /**

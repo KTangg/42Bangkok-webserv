@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 17:34:35 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 21:05:16 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ int HttpRequest::get_timeout() const {
 }
 
 HttpResponse *HttpRequest::get_response() const {
+    if (!_response || !_response->is_ready()) return 0;
     return _response;
 }
 
