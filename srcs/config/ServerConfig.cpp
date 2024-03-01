@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ServerConfig.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 02:08:05 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/03/01 18:18:18 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,8 @@ ServerConfig::ServerConfig(const ServerConfig& src)
     : _name(src._name),
       _max_body_size(src._max_body_size),
       _error_pages(src._error_pages),
-      _routes(src._routes) {
+      _routes(src._routes),
+      _timeout(src._timeout) {
 }
 
 /**
@@ -49,8 +50,13 @@ ServerConfig::ServerConfig(const ServerConfig& src)
 ServerConfig::ServerConfig(const std::map<std::string, Route>& routes,
                            const std::string&                  name,
                            const size_t&                       max_body_size,
-                           const std::map<int, ErrorPage>&     error_pages)
-    : _name(name), _max_body_size(max_body_size), _error_pages(error_pages), _routes(routes) {
+                           const std::map<int, ErrorPage>&     error_pages,
+                           int                                 timeout)
+    : _name(name),
+      _max_body_size(max_body_size),
+      _error_pages(error_pages),
+      _routes(routes),
+      _timeout(timeout) {
 }
 
 /**
@@ -101,11 +107,29 @@ const ErrorPage& ServerConfig::get_error_page(int code) const {
  * @return const Route& The route.
  */
 const Route& ServerConfig::get_route(const std::string& path) const {
-    std::map<std::string, Route>::const_iterator it = _routes.find(path);
+    std::map<std::string, Route>::const_iterator dest = _routes.end();
 
-    if (it == _routes.end()) {
+    for (std::map<std::string, Route>::const_iterator it = _routes.begin(); it != _routes.end();
+         it++) {
+        size_t route_length = 0;
+        if (it->first.length() == 0 || path.length() == 0) continue;
+
+        // Searching for matching route prefix
+        if (path.rfind(it->first, 0) == 0) {
+            if (it->first.length() > route_length) {
+                route_length = it->first.length();
+                dest = it;
+            }
+        }
+    }
+
+    if (dest == _routes.end()) {
         throw std::out_of_range("Route not found");
     }
 
-    return it->second;
+    return dest->second;
+}
+
+int ServerConfig::get_timeout() const {
+    return _timeout;
 }

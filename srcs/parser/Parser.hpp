@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 13:48:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/25 16:16:26 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 23:24:15 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,9 @@
 #include "logger/Logger.hpp"
 #include "route/Route.hpp"
 #include "utils/utils.hpp"
+
+#define DEFAULT_HOST "localhost"
+#define DEFAULT_TIMEOUT 60
 
 class Parser {
    public:
@@ -47,8 +50,8 @@ class Parser {
     std::string                                       _M_get_server_block(std::string& content);
     std::vector<std::pair<std::string, std::string> > _M_parse_generic_block(std::string& config);
     Config                                            _M_parse_server_block(std::string& config);
-    Route                                             _M_parse_route_block(std::string& config);
-    void                                              _M_throw_invalid_config();
+    Route _M_parse_route_block(std::string& config, std::string root);
+    void  _M_throw_invalid_config();
 };
 
 #endif /* __PARSER_HPP__ */
