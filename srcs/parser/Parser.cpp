@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 16:41:43 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 17:47:14 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,6 +212,8 @@ Config Parser::_M_parse_server_block(std::string& config) {
             root = it->second;
         } else if (it->first == "request_timeout") {
             timeout = atoi(&(it->second[0]));
+        } else if (it->first == "client_max_body_size") {
+            max_body_size = atoi(&(it->second[0])) * 1024;
         }
     }
 

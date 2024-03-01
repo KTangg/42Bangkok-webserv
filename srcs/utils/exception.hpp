@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 21:21:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 09:23:07 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 16:51:04 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,20 @@ namespace ft {
         InvalidHttpRequest(const std::string& msg) throw() : _msg(msg) {
         }
         virtual ~InvalidHttpRequest() throw() {
+        }
+        virtual const char* what() const throw() {
+            return _msg.c_str();
+        }
+
+       private:
+        std::string _msg;
+    };
+
+    class EntityTooLarge : public std::exception {
+       public:
+        EntityTooLarge(const std::string& msg) throw() : _msg(msg) {
+        }
+        virtual ~EntityTooLarge() throw() {
         }
         virtual const char* what() const throw() {
             return _msg.c_str();

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 09:39:26 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 17:20:46 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,9 @@ bool Server::match_name(const std::string& name) const {
  * @param req HttpRequest object
  */
 void Server::serve_request(HttpRequest& req) {
-    HttpResponse* response = 0;
+    HttpResponse* response = req.get_response();
+
+    if (response) return;
 
     try {
         const Route& route = _config.get_route(req.get_path());

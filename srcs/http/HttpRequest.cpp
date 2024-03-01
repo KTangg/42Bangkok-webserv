@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 16:03:52 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 17:34:35 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,10 @@ const std::string &HttpRequest::get_content() const {
     return _content;
 }
 
+int HttpRequest::get_content_length() const {
+    return _content_length;
+}
+
 int HttpRequest::get_timeout() const {
     return _timeout;
 }
@@ -84,6 +88,7 @@ void HttpRequest::append_content(const std::string &content, int len) {
 
 void HttpRequest::set_response(HttpResponse *res) {
     _response = res;
+    _is_completed = true;
 }
 
 void HttpRequest::set_timeout(int timeout) {

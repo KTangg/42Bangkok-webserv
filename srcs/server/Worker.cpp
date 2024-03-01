@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 16:03:37 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 18:18:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,7 +83,9 @@ void Worker::_M_run() {
             } else {
                 _M_handle_client_request(it);
             }
-        } else if (it->revents & POLLOUT && _request_queue[it->fd].size() > 0) {
+        }
+
+        if (it->revents & POLLOUT && _request_queue[it->fd].size() > 0) {
             _M_handle_server_response(it);
         }
 
@@ -248,10 +250,14 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
         try {
             request = HttpRequest::parse_request(buf, ret, _logger);
             _request_queue[it->fd].push(request);
-            _M_route_server(*request);
 
             _logger.log(Logger::INFO, "[" + ft::to_string(it->fd) + "] Received HTTP Request: " +
                                           request->get_method() + " " + request->get_path());
+
+            if (!_M_validate_request(*request)) {
+                it->revents |= POLLHUP;
+                return;
+            }
         } catch (ft::InvalidHttpRequest& e) {
             _logger.log(Logger::ERROR, e.what());
             it->revents |= POLLHUP;
@@ -282,9 +288,19 @@ Server& Worker::_M_route_server(HttpRequest& req) {
     if (!server) {
         server = &(_servers.front());
     }
-    int timeout = server->getConfig().get_timeout();
-    req.set_timeout(timeout);
     return *server;
+}
+
+bool Worker::_M_validate_request(HttpRequest& req) {
+    Server& server = _M_route_server(req);
+    int     timeout = server.getConfig().get_timeout();
+    req.set_timeout(timeout);
+
+    if (size_t(req.get_content_length()) > server.getConfig().get_max_body_size()) {
+        req.set_response(new HttpResponse(413, "Request Entity Too Large"));
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -295,16 +311,15 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
     while (_request_queue[it->fd].size() > 0) {
-        HttpRequest* req = _request_queue[it->fd].front();
-        if (!req->is_completed() && !req->check_timeout()) continue;
-        if (!req->is_completed() && req->check_timeout()) {
+        HttpRequest*  req = _request_queue[it->fd].front();
+        HttpResponse* res = req->get_response();
+        if (req->check_timeout()) {
             req->set_response(new HttpResponse(408, "Connection Timed Out"));
+            res = req->get_response();
             it->revents |= POLLHUP;
         }
-        HttpResponse* res = req->get_response();
-        std::string   response_msg = res->get_raw_message();
-
-        if (!res) continue;
+        if (!res) break;
+        std::string response_msg = res->get_raw_message();
 
         _request_queue[it->fd].pop();
         delete req;

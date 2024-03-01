@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 13:47:19 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 17:32:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,7 @@ class Worker {
     void _M_handle_server_response(poller_it_t& it);
 
     Server& _M_route_server(HttpRequest& req);
+    bool    _M_validate_request(HttpRequest& req);
 
     static int _S_non_block_fd(int fd);
 };
