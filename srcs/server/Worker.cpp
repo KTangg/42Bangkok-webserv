@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 14:22:39 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 16:03:37 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -241,7 +241,6 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     // Create request abstraction
     HttpRequest* request = 0;
 
-    // TODO: Handle request timeout
     if (_request_queue[it->fd].size() > 0 && !_request_queue[it->fd].front()->is_completed()) {
         request = _request_queue[it->fd].front();
         request->append_content(std::string(buf, ret), ret);
@@ -249,9 +248,13 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
         try {
             request = HttpRequest::parse_request(buf, ret, _logger);
             _request_queue[it->fd].push(request);
+            _M_route_server(*request);
+
+            _logger.log(Logger::INFO, "[" + ft::to_string(it->fd) + "] Received HTTP Request: " +
+                                          request->get_method() + " " + request->get_path());
         } catch (ft::InvalidHttpRequest& e) {
             _logger.log(Logger::ERROR, e.what());
-            _M_handle_client_disconnection(it);
+            it->revents |= POLLHUP;
             return;
         }
     }
@@ -279,6 +282,8 @@ Server& Worker::_M_route_server(HttpRequest& req) {
     if (!server) {
         server = &(_servers.front());
     }
+    int timeout = server->getConfig().get_timeout();
+    req.set_timeout(timeout);
     return *server;
 }
 
@@ -289,12 +294,13 @@ Server& Worker::_M_route_server(HttpRequest& req) {
 void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
-    HttpResponse response(200, "Testing Response with plain text");
-    std::string  res = response.get_raw_message();
-
     while (_request_queue[it->fd].size() > 0) {
         HttpRequest* req = _request_queue[it->fd].front();
-        if (!req->is_completed()) continue;
+        if (!req->is_completed() && !req->check_timeout()) continue;
+        if (!req->is_completed() && req->check_timeout()) {
+            req->set_response(new HttpResponse(408, "Connection Timed Out"));
+            it->revents |= POLLHUP;
+        }
         HttpResponse* res = req->get_response();
         std::string   response_msg = res->get_raw_message();
 
@@ -311,6 +317,11 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
         } else {
             _logger.log(Logger::DEBUG,
                         "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
+            std::istringstream iss(response_msg);
+            std::string        response_status;
+            std::getline(iss, response_status);
+            _logger.log(Logger::INFO,
+                        "[" + ft::to_string(it->fd) + "] Sent HTTP Response: " + response_status);
         }
     }
 }

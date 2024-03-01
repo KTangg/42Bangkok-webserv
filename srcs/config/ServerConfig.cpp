@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 17:54:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 23:51:41 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 15:07:30 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,8 @@ ServerConfig::ServerConfig(const ServerConfig& src)
     : _name(src._name),
       _max_body_size(src._max_body_size),
       _error_pages(src._error_pages),
-      _routes(src._routes) {
+      _routes(src._routes),
+      _timeout(src._timeout) {
 }
 
 /**
@@ -49,8 +50,13 @@ ServerConfig::ServerConfig(const ServerConfig& src)
 ServerConfig::ServerConfig(const std::map<std::string, Route>& routes,
                            const std::string&                  name,
                            const size_t&                       max_body_size,
-                           const std::map<int, ErrorPage>&     error_pages)
-    : _name(name), _max_body_size(max_body_size), _error_pages(error_pages), _routes(routes) {
+                           const std::map<int, ErrorPage>&     error_pages,
+                           int                                 timeout)
+    : _name(name),
+      _max_body_size(max_body_size),
+      _error_pages(error_pages),
+      _routes(routes),
+      _timeout(timeout) {
 }
 
 /**
@@ -122,4 +128,8 @@ const Route& ServerConfig::get_route(const std::string& path) const {
     }
 
     return dest->second;
+}
+
+int ServerConfig::get_timeout() const {
+    return _timeout;
 }

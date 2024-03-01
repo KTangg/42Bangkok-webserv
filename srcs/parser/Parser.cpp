@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/29 19:38:23 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 16:41:43 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -193,6 +193,9 @@ Config Parser::_M_parse_server_block(std::string& config) {
     std::vector<ServerConfig>    server_configs;
     std::string                  root;
     int                          port = -1;
+    int                          timeout = 60;
+    size_t                       max_body_size = DEFAULT_MAX_BODY_SIZE;
+    std::map<int, ErrorPage>     error_pages = ft::initialize_error_pages();
 
     std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
     for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
@@ -207,6 +210,8 @@ Config Parser::_M_parse_server_block(std::string& config) {
             host = it->second;
         } else if (it->first == "root") {
             root = it->second;
+        } else if (it->first == "request_timeout") {
+            timeout = atoi(&(it->second[0]));
         }
     }
 
@@ -222,7 +227,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
     std::vector<std::string> server_names = ft::split_whitespace(host);
     for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
          it++) {
-        rtn.add_server_config(ServerConfig(routes, *it));
+        rtn.add_server_config(ServerConfig(routes, *it, max_body_size, error_pages, timeout));
     }
 
     return rtn;

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 11:52:58 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 16:03:52 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,13 +29,12 @@ HttpRequest::HttpRequest(const Logger      &logger,
       _content_type(content_type),
       _content(content),
       _response(0),
-      _is_completed(false) {
+      _is_completed(false),
+      _time(time(0)),
+      _timeout(60) {
     if (content_length <= int(_content.length())) {
         _is_completed = true;
     }
-    _logger.log(Logger::INFO, "Received HTTP Request: " + _method + " " + _path);
-    _logger.log(Logger::DEBUG, "\tHost: " + _host + " Connection: " + _connection);
-    _logger.log(Logger::DEBUG, "\tContent-Type: " + _content_type);
 }
 
 HttpRequest::~HttpRequest() {
@@ -64,6 +63,10 @@ const std::string &HttpRequest::get_content() const {
     return _content;
 }
 
+int HttpRequest::get_timeout() const {
+    return _timeout;
+}
+
 HttpResponse *HttpRequest::get_response() const {
     return _response;
 }
@@ -81,6 +84,18 @@ void HttpRequest::append_content(const std::string &content, int len) {
 
 void HttpRequest::set_response(HttpResponse *res) {
     _response = res;
+}
+
+void HttpRequest::set_timeout(int timeout) {
+    _timeout = timeout;
+}
+
+bool HttpRequest::check_timeout() const {
+    time_t cur_time = time(0);
+    if (difftime(cur_time, _time) >= _timeout) {
+        return true;
+    }
+    return false;
 }
 
 /**
