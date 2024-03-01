@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 11:45:58 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/01 14:22:39 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,8 +224,10 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     if (ret == -1) {
         _logger.log(Logger::ERROR, "Failed to receive data from client " + ft::to_string(it->fd));
         it->revents |= POLLERR;
+        return;
     } else if (ret == 0) {
         it->revents |= POLLHUP;
+        return;
     } else {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(ret) + " bytes from client " +
                                        ft::to_string(it->fd));
@@ -239,6 +241,7 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     // Create request abstraction
     HttpRequest* request = 0;
 
+    // TODO: Handle request timeout
     if (_request_queue[it->fd].size() > 0 && !_request_queue[it->fd].front()->is_completed()) {
         request = _request_queue[it->fd].front();
         request->append_content(std::string(buf, ret), ret);
@@ -253,9 +256,7 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
         }
     }
 
-    if (!request->is_completed()) {
-        return;
-    }
+    if (!request->is_completed()) return;
 
     Server& server = _M_route_server(*request);
     server.serve_request(*request);
