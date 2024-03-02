@@ -6,13 +6,14 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:41:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 17:23:17 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 09:33:44 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __SERVER_HPP__
 #define __SERVER_HPP__
 
+#include <dirent.h>
 #include <sys/stat.h>
 
 #include <config/ServerConfig.hpp>
@@ -38,6 +39,7 @@ class Server {
     HttpResponse* serve_404();
     HttpResponse* serve_405();
     HttpResponse* serve_500();
+    HttpResponse* serve_directory_listing(const std::string& path, const HttpRequest& req);
     HttpResponse* serve_static_files(const std::string& path, HttpRequest& req);
 
     const ServerConfig& getConfig() const;

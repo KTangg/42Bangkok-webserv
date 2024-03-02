@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/02 00:19:41 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 09:24:54 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ HttpResponse::HttpResponse()
 HttpResponse::HttpResponse(int status_code)
     : _status_code(status_code),
       _server("webserv/1.0.0"),
-      _connection("close"),
+      _connection("keep-alive"),
       _content_type("text/plain"),
       _cgi(0) {
     set_date();

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 23:33:14 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 09:37:26 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,6 +113,14 @@ HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequ
                 path = index_path;
                 break;
             }
+        }
+        std::cout << path << std::endl;
+        if (path.end()[-1] == '/') {
+            struct stat info;
+            if (route.is_directory_listing() == false || stat(path.c_str(), &info) != 0) {
+                throw std::out_of_range("File not found");
+            }
+            return serve_directory_listing(path, req);
         }
     }
 
@@ -229,4 +237,25 @@ HttpResponse* Server::serve_405() {
 HttpResponse* Server::serve_500() {
     // TODO: Proper 500 handling
     return new HttpResponse(500, "Internal Server Error");
+}
+
+HttpResponse* Server::serve_directory_listing(const std::string& path, const HttpRequest& req) {
+    std::string content =
+        "<html><head><title>Directory listing</title></head><body><h1>Directory listing</h1><ul>";
+    DIR*           dir;
+    struct dirent* ent;
+    if ((dir = opendir(path.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            content +=
+                "<li><a href=\"" + req.get_path() + ent->d_name + "\">" + ent->d_name + "</a></li>";
+        }
+        closedir(dir);
+    } else {
+        throw std::runtime_error("opendir failed");
+    }
+    content += "</ul></body></html>";
+
+    HttpResponse* response = new HttpResponse(200, content);
+    response->set_content_type("text/html");
+    return response;
 }
