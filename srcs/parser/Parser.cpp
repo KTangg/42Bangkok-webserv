@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 23:23:54 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/03/02 08:57:01 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,6 +214,13 @@ Config Parser::_M_parse_server_block(std::string& config) {
             timeout = atoi(&(it->second[0]));
         } else if (it->first == "client_max_body_size") {
             max_body_size = atoi(&(it->second[0])) * 1024;
+        } else if (it->first == "error_page") {
+            std::vector<std::string>           error_page = ft::split_whitespace(it->second);
+            int                                error_code = atoi(&(error_page[0][0]));
+            std::map<int, ErrorPage>::iterator it = error_pages.find(error_code);
+            if (it != error_pages.end()) error_pages.erase(it);
+            ErrorPage page = ErrorPage(error_code, error_page[1]);
+            error_pages.insert(std::pair<int, ErrorPage>(atoi(&(error_page[0][0])), page));
         }
     }
 
@@ -268,7 +275,7 @@ Route Parser::_M_parse_route_block(std::string& config, std::string root) {
             root_directory = it->second;
         } else if (it->first == "index") {
             index_files = ft::split_whitespace(it->second);
-        } else if (it->first == "methods") {
+        } else if (it->first == "methods_allowed") {
             methods = ft::split_whitespace(it->second);
         } else if (it->first == "redirect_path") {
             redirect_path = it->second;
