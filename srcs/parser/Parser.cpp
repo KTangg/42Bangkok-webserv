@@ -230,7 +230,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
         } else if (it->first == "request_timeout") {
             timeout = atoi(&(it->second[0]));
         } else if (it->first == "client_max_body_size") {
-            max_body_size = atoi(&(it->second[0])) * 1024;
+            max_body_size = atoi(&(it->second[0]));
         } else if (it->first == "error_page") {
             std::vector<std::string>           error_page = ft::split_whitespace(it->second);
             int                                error_code = atoi(&(error_page[0][0]));
