@@ -34,7 +34,7 @@ class Master {
 
     void set_is_running(bool is_running);
 
-    void init();
+    int  init();
     void run();
 
    private:
@@ -51,7 +51,7 @@ class Master {
     std::vector<pthread_t> _threads;
 
     void _M_load_config();
-    void _M_create_workers();
+    int  _M_create_workers();
     void _M_run_workers();
     void _M_wait_for_workers();
 

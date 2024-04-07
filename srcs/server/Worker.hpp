@@ -38,7 +38,7 @@ class Worker {
 
     ~Worker();
 
-    void init();
+    int  init();
     void run();
 
    private:

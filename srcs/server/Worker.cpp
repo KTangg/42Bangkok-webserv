@@ -43,9 +43,15 @@ Worker::~Worker() {
  * @brief Init the worker
  *
  */
-void Worker::init() {
-    _M_init_socket();
-    _M_init_poller();
+int Worker::init() {
+    try {
+        _M_init_socket();
+        _M_init_poller();
+        return 0;
+    } catch (const ft::WorkerFatalException& e) {
+        _logger.log(Logger::ERROR, e.what());
+        return -1;
+    }
 }
 
 /**

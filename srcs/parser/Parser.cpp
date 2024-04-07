@@ -111,6 +111,7 @@ void Parser::_M_parse() {
     // Get server blocks
     std::string content = _contents;
     while (ft::strip_space(content) != "") {
+        bool        is_insert = false;
         std::string block = _M_get_server_block(content);
         Config      server_config = _M_parse_server_block(block);
         for (std::vector<Config>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
@@ -124,10 +125,12 @@ void Parser::_M_parse() {
                     }
                 }
                 it->add_server_config(server_config.get_server_configs()[0]);
-                return;
+                is_insert = true;
             }
         }
-        _configs.push_back(server_config);
+        if (!is_insert) {
+            _configs.push_back(server_config);
+        }
     }
 }
 
