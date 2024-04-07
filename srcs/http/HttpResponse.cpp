@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/02 09:24:54 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 14:06:31 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,4 +155,14 @@ std::string HttpResponse::get_raw_message() {
     msg << CRLF;
     msg << _content;
     return msg.str();
+}
+
+int HttpResponse::get_status_code() const {
+    return _status_code;
+}
+
+void HttpResponse::render_error_page(const ErrorPage& error) {
+    _content_type = ft::get_mime_type("html");
+    _content = error.get_error_page();
+    _content_length = _content.length();
 }

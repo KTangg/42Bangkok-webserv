@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/02 09:37:26 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 14:22:18 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,7 +103,6 @@ void Server::serve_request(HttpRequest& req) {
 HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequest& req) {
     // Append index files if needed
     if (path.end()[-1] == '/') {
-        // TODO: Handle directory listing here
         const std::vector<std::string>& index_files = route.get_index_files();
         for (std::vector<std::string>::const_iterator it = index_files.begin();
              it != index_files.end(); it++) {

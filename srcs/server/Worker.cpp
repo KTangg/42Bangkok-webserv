@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/02 00:25:51 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 12:52:04 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -288,6 +288,7 @@ Server& Worker::_M_route_server(HttpRequest& req) {
     if (!server) {
         server = &(_servers.front());
     }
+    req.set_server(*server);
     return *server;
 }
 

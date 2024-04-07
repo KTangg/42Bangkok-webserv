@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 17:22:13 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 13:49:08 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include "constants.hpp"
 #include "http/HttpResponse.hpp"
 #include "logger/Logger.hpp"
+#include "server/Server.hpp"
 #include "utils/exception.hpp"
 #include "utils/utils.hpp"
 
@@ -41,15 +42,17 @@ class HttpRequest {
     int                 get_content_length() const;
     int                 get_timeout() const;
     HttpResponse       *get_response() const;
-        static HttpRequest *parse_request(char *raw_msg, int len, const Logger &logger);
+    Server             &get_server() const;
+    static HttpRequest *parse_request(char *raw_msg, int len, const Logger &logger);
     void                append_content(const std::string &content, int len);
     bool                is_completed() const;
 
     void set_response(HttpResponse *res);
     void set_timeout(int timeout);
-    
+    void set_server(Server &server);
+
     bool check_timeout() const;
-    
+
    private:
     HttpRequest();
     const Logger     &_logger;
@@ -60,11 +63,12 @@ class HttpRequest {
     const int         _content_length;
     const std::string _content_type;
     std::string       _content;
+    Server           *_server;
 
     HttpResponse *_response;
     bool          _is_completed;
     time_t        _time;
     int           _timeout;
-    };
+};
 
 #endif

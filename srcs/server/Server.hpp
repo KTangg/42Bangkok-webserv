@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:41:34 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/02 09:33:44 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 14:23:21 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,11 @@
 #include <fstream>
 #include <iostream>
 
-#include "http/HttpRequest.hpp"
+#include "logger/Logger.hpp"
 #include "utils/mime_types.hpp"
+
+class HttpRequest;
+class HttpResponse;
 
 class Server {
    public:
@@ -48,5 +51,7 @@ class Server {
     ServerConfig _config;
     const Logger _logger;
 };
+
+#include "http/HttpRequest.hpp"
 
 #endif /* __SERVER_HPP__ */

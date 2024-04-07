@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/01 21:05:16 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 14:05:16 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,12 +88,26 @@ void HttpRequest::append_content(const std::string &content, int len) {
 }
 
 void HttpRequest::set_response(HttpResponse *res) {
+    int status_code = res->get_status_code();
+    for (std::vector<int>::const_iterator it = ft::default_error_code.begin();
+         it != ft::default_error_code.end(); ++it) {
+        const ErrorPage &path = _server->getConfig().get_error_page(status_code);
+        res->render_error_page(path);
+    }
     _response = res;
     _is_completed = true;
 }
 
 void HttpRequest::set_timeout(int timeout) {
     _timeout = timeout;
+}
+
+void HttpRequest::set_server(Server &server) {
+    _server = &server;
+}
+
+Server &HttpRequest::get_server() const {
+    return *_server;
 }
 
 bool HttpRequest::check_timeout() const {

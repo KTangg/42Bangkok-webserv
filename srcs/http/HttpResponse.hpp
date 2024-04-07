@@ -6,20 +6,23 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 09:36:06 by tratanat          #+#    #+#             */
-/*   Updated: 2024/03/02 00:01:23 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 14:01:01 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef __HTTP_RESPONSE_HPP__
 #define __HTTP_RESPONSE_HPP__
 
+#include <algorithm>
 #include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 #include "constants.hpp"
+#include "error/ErrorPage.hpp"
 #include "route/Cgi.hpp"
+#include "utils/mime_types.hpp"
 #include "utils/status_code.hpp"
 
 class HttpResponse {
@@ -39,6 +42,8 @@ class HttpResponse {
     void               set_cgi(Cgi* cgi, const std::string& filepath);
     void               set_redirection(std::string location);
     void               set_connection(std::string connection);
+    int                get_status_code() const;
+    void               render_error_page(const ErrorPage& error);
 
    private:
     HttpResponse();
