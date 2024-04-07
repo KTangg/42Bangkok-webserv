@@ -350,6 +350,8 @@ void Worker::_M_handle_server_response(poller_it_t& it) {
         if (ret == -1) {
             _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
             it->revents |= POLLERR;
+        } else if (ret == 0) {
+            it->revents |= POLLHUP;
         } else {
             _logger.log(Logger::DEBUG,
                         "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
