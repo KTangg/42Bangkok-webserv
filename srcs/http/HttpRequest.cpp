@@ -91,6 +91,7 @@ void HttpRequest::set_response(HttpResponse *res) {
     int status_code = res->get_status_code();
     for (std::vector<int>::const_iterator it = ft::default_error_code.begin();
          it != ft::default_error_code.end(); ++it) {
+        if (*it != status_code) continue;
         const ErrorPage &path = _server->getConfig().get_error_page(status_code);
         res->render_error_page(path);
     }
