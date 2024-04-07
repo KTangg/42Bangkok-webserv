@@ -101,6 +101,8 @@ void Server::serve_request(HttpRequest& req) {
  * @return HttpResponse* Response
  */
 HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequest& req) {
+    struct stat info;
+
     // Append index files if needed
     if (path.end()[-1] == '/') {
         const std::vector<std::string>& index_files = route.get_index_files();
@@ -115,11 +117,13 @@ HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequ
         }
         std::cout << path << std::endl;
         if (path.end()[-1] == '/') {
-            struct stat info;
             if (route.is_directory_listing() == false || stat(path.c_str(), &info) != 0) {
                 throw std::out_of_range("File not found");
             }
-            return serve_directory_listing(path, req);
+
+            if (S_ISDIR(info.st_mode)) {
+                return serve_directory_listing(path, req);
+            }
         }
     }
 
@@ -133,6 +137,16 @@ HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequ
         response->set_content_type(content_type);
         return response;
     } catch (std::runtime_error& e) {
+    }
+
+    if (stat(path.c_str(), &info) != 0) {
+        throw std::out_of_range("File not found");
+    } else if (S_ISDIR(info.st_mode)) {
+        if (route.is_directory_listing() == false) {
+            throw std::out_of_range("File not found");
+        } else {
+            return serve_directory_listing(path, req);
+        }
     }
 
     return serve_static_files(path, req);
