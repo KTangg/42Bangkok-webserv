@@ -113,6 +113,20 @@ void Parser::_M_parse() {
     while (ft::strip_space(content) != "") {
         std::string block = _M_get_server_block(content);
         Config      server_config = _M_parse_server_block(block);
+        for (std::vector<Config>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
+            if (server_config.get_host() == it->get_host() &&
+                server_config.get_port() == it->get_port()) {
+                for (std::vector<ServerConfig>::const_iterator s_it =
+                         it->get_server_configs().begin();
+                     s_it != it->get_server_configs().end(); ++s_it) {
+                    if (server_config.get_server_configs()[0].get_name() == s_it->get_name()) {
+                        _M_throw_invalid_config();
+                    }
+                }
+                it->add_server_config(server_config.get_server_configs()[0]);
+                return;
+            }
+        }
         _configs.push_back(server_config);
     }
 }
@@ -233,7 +247,7 @@ Config Parser::_M_parse_server_block(std::string& config) {
         routes.insert(std::pair<std::string, Route>(path, route));
     }
 
-    std::vector<std::string> server_names = ft::split_whitespace(host);
+    std::vector<std::string> server_names = ft::split_whitespace(server_name_params);
     for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
          it++) {
         rtn.add_server_config(ServerConfig(routes, *it, max_body_size, error_pages, timeout));
