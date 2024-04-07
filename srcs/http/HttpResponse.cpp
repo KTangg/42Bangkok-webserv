@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/04/07 14:06:31 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 19:08:49 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,7 @@ bool HttpResponse::is_ready() {
     if (!_cgi) return true;
     if (!_cgi->is_ready()) return false;
     _content = _cgi->get_content();
+    set_content_type(ft::get_mime_type("html"));
     _content_length = _content.length();
     return true;
 }

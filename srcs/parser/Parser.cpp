@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/02 08:57:01 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 18:23:07 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,7 +276,7 @@ Route Parser::_M_parse_route_block(std::string& config, std::string root) {
     std::string                upload_directory = "";
     std::map<std::string, Cgi> cgi_extensions = std::map<std::string, Cgi>();
 
-    cgi_extensions.insert(std::pair<std::string, Cgi>("php", Cgi("php-cgi", "php")));
+    cgi_extensions.insert(std::pair<std::string, Cgi>("php", Cgi("php-cgi", "php", "")));
 
     const size_t end_pos = config.find('{');
     if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
@@ -304,7 +304,7 @@ Route Parser::_M_parse_route_block(std::string& config, std::string root) {
             std::vector<std::string> cgi_values = ft::split_whitespace(it->second);
             if (cgi_values.size() != 2) _M_throw_invalid_config();
             cgi_extensions.insert(
-                std::pair<std::string, Cgi>(cgi_values[0], Cgi(cgi_values[1], cgi_values[0])));
+                std::pair<std::string, Cgi>(cgi_values[0], Cgi(cgi_values[1], cgi_values[0], "")));
         }
     }
     if (root_directory.empty()) root_directory = root;

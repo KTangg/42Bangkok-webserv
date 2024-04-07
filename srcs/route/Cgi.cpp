@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 23:36:28 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 19:14:55 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,12 @@
  *
  * @param src The object to do the copy.
  */
-Cgi::Cgi(const Cgi& src) : _path(src._path), _extension(src._extension) {
+Cgi::Cgi(const Cgi& src, std::string method, std::string req_content, std::string req_type)
+    : _path(src._path),
+      _extension(src._extension),
+      _method(method),
+      _req_content(req_content),
+      _req_type(req_type) {
 }
 
 /**
@@ -26,8 +31,8 @@ Cgi::Cgi(const Cgi& src) : _path(src._path), _extension(src._extension) {
  * @param path The path to the CGI executable.
  * @param extension The extension of the CGI executable.
  */
-Cgi::Cgi(const std::string& path, const std::string& extension)
-    : _path(path), _extension(extension) {
+Cgi::Cgi(const std::string& path, const std::string& extension, std::string req_content)
+    : _path(path), _extension(extension), _req_content(req_content) {
 }
 
 /**
@@ -35,7 +40,6 @@ Cgi::Cgi(const std::string& path, const std::string& extension)
  *
  */
 Cgi::~Cgi() {
-    // TODO: Make sure to clean up the child process in case of timeout.
 }
 
 /**
@@ -63,16 +67,31 @@ const std::string& Cgi::get_extension() const {
  */
 void Cgi::execute(const std::string& filepath) {
     pipe(_pipefd);
-    (void)filepath;
+    int pipein[2];
+    pipe(pipein);
+    std::stringstream length;
+    std::string       path = "SCRIPT_FILENAME=" + filepath;
+    std::string       method = "REQUEST_METHOD=" + _method;
+    std::string       type = "CONTENT_TYPE=" + _req_type;
+    length << "CONTENT_LENGTH=" << _req_content.size();
+    std::string len_str = length.str();
 
     char* argv[] = {const_cast<char*>(_path.c_str()), const_cast<char*>(filepath.c_str()), NULL};
-    char* envp[] = {const_cast<char*>("REDIRECT_STATUS="), const_cast<char*>("PATH_INFO=/"), NULL};
+    char* envp[] = {
+        const_cast<char*>("REDIRECT_STATUS=CGI"), const_cast<char*>(type.c_str()),
+        const_cast<char*>(method.c_str()),        const_cast<char*>(len_str.c_str()),
+        const_cast<char*>("SCRIPT_NAME="),        const_cast<char*>("REQUEST_URI="),
+        const_cast<char*>("SERVER_NAME=webserv"), const_cast<char*>("SERVER_PROTOCOL=HTTP/1.1"),
+        const_cast<char*>(path.c_str()),          NULL,
+    };
 
     _child_pid = fork();
     if (_child_pid == -1) {
         throw std::runtime_error("fork failed");
     } else if (_child_pid == 0) {
         close(_pipefd[0]);
+        close(pipein[1]);
+        dup2(pipein[0], 0);
         dup2(_pipefd[1], 1);
         dup2(_pipefd[1], 2);
         close(_pipefd[1]);
@@ -81,6 +100,9 @@ void Cgi::execute(const std::string& filepath) {
         exit(EXIT_FAILURE);
     } else {
         close(_pipefd[1]);
+        close(pipein[0]);
+        write(pipein[1], _req_content.c_str(), _req_content.size());
+        close(pipein[1]);
     }
 }
 
@@ -92,17 +114,18 @@ void Cgi::execute(const std::string& filepath) {
  * @return false
  */
 bool Cgi::_M_check_child() {
-    pid_t pid = waitpid(_child_pid, NULL, WNOHANG);
-    if (pid < 0) throw std::runtime_error("waitpid failed");
-    if (pid == 0) return false;
-
     char buffer[4096];
     int  n;
     while ((n = read(_pipefd[0], buffer, 4096)) > 0) {
         _content.append(buffer, n);
     }
+    pid_t pid = waitpid(_child_pid, NULL, WNOHANG);
+    if (pid < 0) throw std::runtime_error("waitpid failed");
+    if (pid == 0) return false;
     close(_pipefd[0]);
     if (n < 0) throw std::runtime_error("read failed");
+    size_t pos = _content.find(CRLF + CRLF);
+    if (pos != 0) _content = _content.substr(pos);
     return true;
 }
 

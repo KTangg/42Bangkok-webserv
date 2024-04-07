@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:20:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/03/01 22:07:51 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 19:08:58 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <string>
+
+#include "constants.hpp"
 
 class Cgi {
    public:
-    Cgi(const Cgi& src);
-    Cgi(const std::string& path, const std::string& extension);
+    Cgi(const Cgi& src, std::string method, std::string req_content, std::string req_type);
+    Cgi(const std::string& path, const std::string& extension, std::string req_content);
 
     ~Cgi();
 
@@ -33,8 +36,6 @@ class Cgi {
     bool               is_ready();
     const std::string& get_content() const;
     void               execute(const std::string& filepath);
-
-    // TODO: Add execute method.
 
    private:
     Cgi();
@@ -45,6 +46,9 @@ class Cgi {
     std::string       _content;
     pid_t             _child_pid;
     int               _pipefd[2];
+    std::string       _method;
+    std::string       _req_content;
+    std::string       _req_type;
 
     bool _M_check_child();
 };
