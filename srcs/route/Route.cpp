@@ -23,8 +23,8 @@ namespace ft {
         std::vector<std::string> methods;
 
         methods.push_back("GET");
-        methods.push_back("POST");
-        methods.push_back("DELETE");
+        // methods.push_back("POST");
+        // methods.push_back("DELETE");
 
         return methods;
     }
