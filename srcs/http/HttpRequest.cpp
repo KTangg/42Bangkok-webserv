@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:12:16 by tratanat          #+#    #+#             */
-/*   Updated: 2024/04/07 14:05:16 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 16:35:51 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,6 +109,10 @@ void HttpRequest::set_server(Server &server) {
 
 Server &HttpRequest::get_server() const {
     return *_server;
+}
+
+const std::string &HttpRequest::get_content_type() const {
+    return _content_type;
 }
 
 bool HttpRequest::check_timeout() const {

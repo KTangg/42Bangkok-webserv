@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/04/07 14:22:18 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 16:38:38 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -161,7 +161,12 @@ HttpResponse* Server::serve_get_response(std::string path, Route route, HttpRequ
  * @return HttpResponse*
  */
 HttpResponse* Server::serve_post_response(std::string path, Route route, HttpRequest& req) {
-    (void)route;
+    std::cout << route.get_upload_directory() << std::endl;
+    if (route.get_upload_directory().length() <= 0) {
+        if (req.get_content_type() == "plain/text") {
+            return new HttpResponse(200, req.get_content());
+        }
+    }
     size_t pos = path.find_last_of(".");
     if (path.end()[-1] == '/' || pos == std::string::npos) {
         throw std::out_of_range("File not found");

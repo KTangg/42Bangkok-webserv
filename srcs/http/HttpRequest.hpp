@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/28 18:02:19 by tratanat          #+#    #+#             */
-/*   Updated: 2024/04/07 13:49:08 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 16:34:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ class HttpRequest {
     const std::string  &get_method() const;
     const std::string  &get_content() const;
     int                 get_content_length() const;
+    const std::string  &get_content_type() const;
     int                 get_timeout() const;
     HttpResponse       *get_response() const;
     Server             &get_server() const;
