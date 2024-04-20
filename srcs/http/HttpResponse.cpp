@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/29 12:34:12 by tratanat          #+#    #+#             */
-/*   Updated: 2024/04/07 19:08:49 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/20 12:26:20 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,8 +151,8 @@ std::string HttpResponse::get_raw_message() {
     msg << "Connection: " << _connection << CRLF;
     if (_connection == "keep-alive" && _keep_alive.length() > 0)
         msg << "Keep-Alive: " << _keep_alive << CRLF;
-    if (_content.length() > 0) msg << "Content-Type: " << _content_type << CRLF;
-    if (_content_length > 0) msg << "Content-Length: " << _content_length << CRLF;
+    msg << "Content-Type: " << _content_type << CRLF;
+    msg << "Content-Length: " << _content_length << CRLF;
     msg << CRLF;
     msg << _content;
     return msg.str();
