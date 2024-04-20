@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:43:14 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/04/07 19:10:39 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/20 13:02:51 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,10 +179,6 @@ HttpResponse* Server::serve_post_response(std::string path, Route route, HttpReq
     }
     size_t pos = path.find_last_of(".");
     if (path.end()[-1] == '/' || pos == std::string::npos) {
-        throw std::out_of_range("File not found");
-    }
-    std::map<std::string, std::string>::const_iterator mime_type = ft::mime_types.find(extension);
-    if (mime_type == ft::mime_types.end()) {
         throw std::out_of_range("File not found");
     }
     pos = path.find_last_of("/");
