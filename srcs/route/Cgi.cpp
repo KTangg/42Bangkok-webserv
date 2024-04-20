@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 20:24:58 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/04/20 12:02:41 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/20 14:16:17 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,7 +126,7 @@ bool Cgi::_M_check_child() {
     close(_pipefd[0]);
     if (n < 0) throw std::runtime_error("read failed");
     size_t pos = _content.find(CRLF + CRLF);
-    if (pos != 0) _content = _content.substr(pos);
+    if (pos != 0 && pos != std::string::npos) _content = _content.substr(pos);
     return true;
 }
 

@@ -6,7 +6,7 @@
 /*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/04/07 18:23:07 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/20 14:15:05 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -275,8 +275,6 @@ Route Parser::_M_parse_route_block(std::string& config, std::string root) {
     std::vector<std::string>   index_files = ft::initialize_index_files();
     std::string                upload_directory = "";
     std::map<std::string, Cgi> cgi_extensions = std::map<std::string, Cgi>();
-
-    cgi_extensions.insert(std::pair<std::string, Cgi>("php", Cgi("php-cgi", "php", "")));
 
     const size_t end_pos = config.find('{');
     if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
