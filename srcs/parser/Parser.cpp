@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/06 14:01:37 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/02/25 16:24:09 by tratanat         ###   ########.fr       */
+/*   Updated: 2024/04/07 18:23:07 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,9 +111,26 @@ void Parser::_M_parse() {
     // Get server blocks
     std::string content = _contents;
     while (ft::strip_space(content) != "") {
+        bool        is_insert = false;
         std::string block = _M_get_server_block(content);
         Config      server_config = _M_parse_server_block(block);
-        _configs.push_back(server_config);
+        for (std::vector<Config>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
+            if (server_config.get_host() == it->get_host() &&
+                server_config.get_port() == it->get_port()) {
+                for (std::vector<ServerConfig>::const_iterator s_it =
+                         it->get_server_configs().begin();
+                     s_it != it->get_server_configs().end(); ++s_it) {
+                    if (server_config.get_server_configs()[0].get_name() == s_it->get_name()) {
+                        _M_throw_invalid_config();
+                    }
+                }
+                it->add_server_config(server_config.get_server_configs()[0]);
+                is_insert = true;
+            }
+        }
+        if (!is_insert) {
+            _configs.push_back(server_config);
+        }
     }
 }
 
@@ -186,12 +203,16 @@ std::vector<std::pair<std::string, std::string> > Parser::_M_parse_generic_block
  *
  */
 Config Parser::_M_parse_server_block(std::string& config) {
-    std::string                  host = "127.0.0.1";
+    std::string                  host = DEFAULT_HOST;
     std::string                  server_name_params;
     std::vector<std::string>     route_configs;
     std::map<std::string, Route> routes;
     std::vector<ServerConfig>    server_configs;
+    std::string                  root;
     int                          port = -1;
+    int                          timeout = DEFAULT_TIMEOUT;
+    size_t                       max_body_size = DEFAULT_MAX_BODY_SIZE;
+    std::map<int, ErrorPage>     error_pages = ft::initialize_error_pages();
 
     std::vector<std::pair<std::string, std::string> > config_map = _M_parse_generic_block(config);
     for (std::vector<std::pair<std::string, std::string> >::iterator it = config_map.begin();
@@ -204,6 +225,19 @@ Config Parser::_M_parse_server_block(std::string& config) {
             route_configs.push_back(it->second);
         } else if (it->first == "host") {
             host = it->second;
+        } else if (it->first == "root") {
+            root = it->second;
+        } else if (it->first == "request_timeout") {
+            timeout = atoi(&(it->second[0]));
+        } else if (it->first == "client_max_body_size") {
+            max_body_size = atoi(&(it->second[0]));
+        } else if (it->first == "error_page") {
+            std::vector<std::string>           error_page = ft::split_whitespace(it->second);
+            int                                error_code = atoi(&(error_page[0][0]));
+            std::map<int, ErrorPage>::iterator it = error_pages.find(error_code);
+            if (it != error_pages.end()) error_pages.erase(it);
+            ErrorPage page = ErrorPage(error_code, error_page[1]);
+            error_pages.insert(std::pair<int, ErrorPage>(atoi(&(error_page[0][0])), page));
         }
     }
 
@@ -211,23 +245,39 @@ Config Parser::_M_parse_server_block(std::string& config) {
 
     for (std::vector<std::string>::iterator it = route_configs.begin(); it != route_configs.end();
          it++) {
-        Route       route = _M_parse_route_block(*it);
+        Route       route = _M_parse_route_block(*it, root);
         std::string path = route.get_path();
         routes.insert(std::pair<std::string, Route>(path, route));
     }
 
-    std::vector<std::string> server_names = ft::split(host);
+    std::vector<std::string> server_names = ft::split_whitespace(server_name_params);
     for (std::vector<std::string>::iterator it = server_names.begin(); it != server_names.end();
          it++) {
-        rtn.add_server_config(ServerConfig(routes, *it));
+        rtn.add_server_config(ServerConfig(routes, *it, max_body_size, error_pages, timeout));
     }
 
     return rtn;
 }
 
-Route Parser::_M_parse_route_block(std::string& config) {
-    std::string  path = "";
-    std::string  root_directory = "";
+/**
+ * @brief Parse location block inside the server config
+ *
+ * @param config The raw text of the location block
+ * @param root Root set in the server block if not overridden in location block
+ * @return Route
+ */
+Route Parser::_M_parse_route_block(std::string& config, std::string root) {
+    std::string                path = "";
+    std::string                root_directory = "";
+    std::vector<std::string>   methods = ft::initialize_methods();
+    std::string                redirect_path = "";
+    bool                       directory_listing = false;
+    std::vector<std::string>   index_files = ft::initialize_index_files();
+    std::string                upload_directory = "";
+    std::map<std::string, Cgi> cgi_extensions = std::map<std::string, Cgi>();
+
+    cgi_extensions.insert(std::pair<std::string, Cgi>("php", Cgi("php-cgi", "php", "")));
+
     const size_t end_pos = config.find('{');
     if (end_pos == std::string::npos || end_pos >= config.length()) _M_throw_invalid_config();
 
@@ -240,9 +290,26 @@ Route Parser::_M_parse_route_block(std::string& config) {
          it != config_map.end(); it++) {
         if (it->first == "root") {
             root_directory = it->second;
+        } else if (it->first == "index") {
+            index_files = ft::split_whitespace(it->second);
+        } else if (it->first == "methods_allowed") {
+            methods = ft::split_whitespace(it->second);
+        } else if (it->first == "redirect_path") {
+            redirect_path = it->second;
+        } else if (it->first == "upload_directory") {
+            upload_directory = it->second;
+        } else if (it->first == "directory_listing") {
+            directory_listing = it->second == "on";
+        } else if (it->first == "cgi") {
+            std::vector<std::string> cgi_values = ft::split_whitespace(it->second);
+            if (cgi_values.size() != 2) _M_throw_invalid_config();
+            cgi_extensions.insert(
+                std::pair<std::string, Cgi>(cgi_values[0], Cgi(cgi_values[1], cgi_values[0], "")));
         }
     }
-    return Route(path, root_directory);
+    if (root_directory.empty()) root_directory = root;
+    return Route(path, root_directory, methods, redirect_path, directory_listing, index_files,
+                 upload_directory, cgi_extensions);
 }
 
 /**

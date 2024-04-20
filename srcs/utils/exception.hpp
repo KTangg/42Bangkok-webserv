@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exception.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 21:21:30 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/04 21:52:26 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/03/01 16:51:04 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,34 @@ namespace ft {
         WorkerNonFatalException(const std::string& msg) throw() : _msg(msg) {
         }
         virtual ~WorkerNonFatalException() throw() {
+        }
+        virtual const char* what() const throw() {
+            return _msg.c_str();
+        }
+
+       private:
+        std::string _msg;
+    };
+
+    class InvalidHttpRequest : public std::exception {
+       public:
+        InvalidHttpRequest(const std::string& msg) throw() : _msg(msg) {
+        }
+        virtual ~InvalidHttpRequest() throw() {
+        }
+        virtual const char* what() const throw() {
+            return _msg.c_str();
+        }
+
+       private:
+        std::string _msg;
+    };
+
+    class EntityTooLarge : public std::exception {
+       public:
+        EntityTooLarge(const std::string& msg) throw() : _msg(msg) {
+        }
+        virtual ~EntityTooLarge() throw() {
         }
         virtual const char* what() const throw() {
             return _msg.c_str();

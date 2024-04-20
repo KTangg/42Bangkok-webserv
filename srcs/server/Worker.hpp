@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/03 22:51:52 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:01:38 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/03/01 17:32:09 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,12 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 
+#include <map>
+#include <queue>
+
 #include "config/Config.hpp"
+#include "http/HttpRequest.hpp"
+#include "http/HttpResponse.hpp"
 #include "logger/Logger.hpp"
 #include "server/Poller.hpp"
 #include "server/Server.hpp"
@@ -33,16 +38,17 @@ class Worker {
 
     ~Worker();
 
-    void init();
+    int  init();
     void run();
 
    private:
     Worker();
 
-    const Logger  _logger;
-    int           _socket;
-    Poller        _poller;
-    const Master& _master;
+    const Logger                             _logger;
+    int                                      _socket;
+    Poller                                   _poller;
+    const Master&                            _master;
+    std::map<int, std::queue<HttpRequest*> > _request_queue;
 
     sockaddr_in_t       _addr;
     std::vector<Server> _servers;
@@ -59,6 +65,9 @@ class Worker {
 
     void _M_handle_client_request(poller_it_t& it);
     void _M_handle_server_response(poller_it_t& it);
+
+    Server& _M_route_server(HttpRequest& req);
+    bool    _M_validate_request(HttpRequest& req);
 
     static int _S_non_block_fd(int fd);
 };

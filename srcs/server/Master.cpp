@@ -57,9 +57,12 @@ void Master::set_is_running(bool is_running) {
  * @brief Load the config file and create the workers
  *
  */
-void Master::init() {
+int Master::init() {
     _M_load_config();
-    _M_create_workers();
+    if (_M_create_workers() != 0) {
+        return -1;
+    }
+    return 0;
 }
 
 /**
@@ -100,13 +103,17 @@ void Master::_M_load_config() {
  * @brief Create the workers
  *
  */
-void Master::_M_create_workers() {
+int Master::_M_create_workers() {
     for (std::vector<Config>::iterator it = _configs.begin(); it != _configs.end(); ++it) {
         Worker* worker = new Worker(*it, *this);
-        worker->init();
+        if (worker->init() != 0) {
+            return -1;
+        };
 
         _workers.push_back(worker);
     }
+
+    return 0;
 }
 
 /**

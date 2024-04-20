@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Worker.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: spoolpra <spoolpra@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: tratanat <tawan.rtn@gmail.com>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/04 15:44:56 by spoolpra          #+#    #+#             */
-/*   Updated: 2024/01/07 03:43:35 by spoolpra         ###   ########.fr       */
+/*   Updated: 2024/04/07 12:52:04 by tratanat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,15 +29,29 @@ Worker::Worker(const Config& config, const Master& master)
  *
  */
 Worker::~Worker() {
+    for (std::map<int, std::queue<HttpRequest*> >::iterator it = _request_queue.begin();
+         it != _request_queue.end(); it++) {
+        while ((*it).second.size() > 0) {
+            HttpRequest* cur = (*it).second.front();
+            (*it).second.pop();
+            delete cur;
+        }
+    }
 }
 
 /**
  * @brief Init the worker
  *
  */
-void Worker::init() {
-    _M_init_socket();
-    _M_init_poller();
+int Worker::init() {
+    try {
+        _M_init_socket();
+        _M_init_poller();
+        return 0;
+    } catch (const ft::WorkerFatalException& e) {
+        _logger.log(Logger::ERROR, e.what());
+        return -1;
+    }
 }
 
 /**
@@ -75,7 +89,9 @@ void Worker::_M_run() {
             } else {
                 _M_handle_client_request(it);
             }
-        } else if (it->revents & POLLOUT) {
+        }
+
+        if (it->revents & POLLOUT && _request_queue[it->fd].size() > 0) {
             _M_handle_server_response(it);
         }
 
@@ -194,6 +210,11 @@ poller_it_t Worker::_M_handle_client_disconnection(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Client " + ft::to_string(it->fd) + " disconnected");
 
     close(it->fd);
+    while (_request_queue[it->fd].size() > 0) {
+        HttpRequest* req = _request_queue[it->fd].front();
+        _request_queue[it->fd].pop();
+        delete req;
+    }
 
     return _poller.remove_fd(it);
 }
@@ -211,13 +232,101 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
     if (ret == -1) {
         _logger.log(Logger::ERROR, "Failed to receive data from client " + ft::to_string(it->fd));
         it->revents |= POLLERR;
+        return;
     } else if (ret == 0) {
         it->revents |= POLLHUP;
+        return;
     } else {
         _logger.log(Logger::DEBUG, "Received " + ft::to_string(ret) + " bytes from client " +
                                        ft::to_string(it->fd));
     }
-    // TODO handle client request
+
+    if (_request_queue.count(it->fd) == 0) {
+        std::queue<HttpRequest*> new_queue;
+        _request_queue.insert(std::pair<int, std::queue<HttpRequest*> >(it->fd, new_queue));
+    }
+
+    // Create request abstraction
+    HttpRequest* request = 0;
+
+    if (_request_queue[it->fd].size() > 0 && !_request_queue[it->fd].front()->is_completed()) {
+        request = _request_queue[it->fd].front();
+        request->append_content(std::string(buf, ret), ret);
+    } else {
+        try {
+            request = HttpRequest::parse_request(buf, ret, _logger);
+            _request_queue[it->fd].push(request);
+
+            _logger.log(Logger::INFO, "[" + ft::to_string(it->fd) + "] Received HTTP Request: " +
+                                          request->get_method() + " " + request->get_path());
+
+            if (!_M_validate_request(*request)) {
+                it->revents |= POLLHUP;
+                return;
+            }
+        } catch (ft::InvalidHttpRequest& e) {
+            _logger.log(Logger::ERROR, e.what());
+            it->revents |= POLLHUP;
+            return;
+        }
+    }
+
+    if (!request->is_completed()) return;
+
+    Server& server = _M_route_server(*request);
+    server.serve_request(*request);
+}
+
+/**
+ * @brief Route a request to the proper server.
+ * If no exact match, will return the first server.
+ *
+ * @param req HttpRequest
+ * @return Server& Server that matches the request
+ */
+Server& Worker::_M_route_server(HttpRequest& req) {
+    Server* server = 0;
+    for (std::vector<Server>::iterator it = _servers.begin(); it != _servers.end(); it++) {
+        if (it->match_name(req.get_host())) {
+            server = &(*it);
+        }
+    }
+    if (!server) {
+        server = &(_servers.front());
+    }
+    req.set_server(*server);
+    return *server;
+}
+
+bool Worker::_M_validate_request(HttpRequest& req) {
+    Server& server = _M_route_server(req);
+    int     timeout = server.getConfig().get_timeout();
+    req.set_timeout(timeout);
+
+    if (size_t(req.get_content_length()) > server.getConfig().get_max_body_size()) {
+        HttpResponse* response = new HttpResponse(413, "Request Entity Too Large");
+        response->set_connection("close");
+        req.set_response(response);
+        return false;
+    }
+
+    try {
+        const Route& route = server.getConfig().get_route(req.get_path());
+        if (route.get_redirect_path().length() > 0) {
+            HttpResponse* response = new HttpResponse(301, "Moved Permanently");
+            response->set_redirection(route.get_redirect_path() +
+                                      req.get_path().substr(route.get_path().length()));
+            response->set_connection("close");
+            req.set_response(response);
+            return false;
+        }
+    } catch (std::out_of_range& e) {
+        HttpResponse* response = new HttpResponse(404, "Not Found");
+        response->set_connection("close");
+        req.set_response(response);
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -227,17 +336,37 @@ void Worker::_M_handle_client_request(poller_it_t& it) {
 void Worker::_M_handle_server_response(poller_it_t& it) {
     _logger.log(Logger::DEBUG, "Server " + ft::to_string(it->fd) + " sent a response");
 
-    // TODO handle server response
-    std::string res = "HTTP/1.1 200 OK\r\n\r\nHello World!";
+    while (_request_queue[it->fd].size() > 0) {
+        HttpRequest*  req = _request_queue[it->fd].front();
+        HttpResponse* res = req->get_response();
+        if (req->check_timeout()) {
+            req->set_response(new HttpResponse(408, "Connection Timed Out"));
+            res = req->get_response();
+            res->set_connection("close");
+            it->revents |= POLLHUP;
+        }
+        if (!res) break;
+        std::string response_msg = res->get_raw_message();
 
-    int ret = send(it->fd, res.c_str(), res.size(), 0);
+        _request_queue[it->fd].pop();
+        delete req;
 
-    if (ret == -1) {
-        _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
-        it->revents |= POLLERR;
-    } else {
-        _logger.log(Logger::DEBUG,
-                    "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
+        int ret = send(it->fd, response_msg.c_str(), response_msg.size(), 0);
+
+        if (ret == -1) {
+            _logger.log(Logger::ERROR, "Failed to send data to client " + ft::to_string(it->fd));
+            it->revents |= POLLERR;
+        } else if (ret == 0) {
+            it->revents |= POLLHUP;
+        } else {
+            _logger.log(Logger::DEBUG,
+                        "Sent " + ft::to_string(ret) + " bytes to client " + ft::to_string(it->fd));
+            std::istringstream iss(response_msg);
+            std::string        response_status;
+            std::getline(iss, response_status);
+            _logger.log(Logger::INFO,
+                        "[" + ft::to_string(it->fd) + "] Sent HTTP Response: " + response_status);
+        }
     }
 }
 
